@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package submit;
+
+message SubmitRequest {
+  string uid = 1;
+  string pass = 2;
+  string url = 3;
+  string title = 4;
+  string body = 5;
+}
+
+message SubmitResponse {
+  int32 code = 1;  
+  string message = 2;
+}
+
+// A simple Submit service.
+service SubmitService {
+  // One request followed by one response
+  // The server returns the client message as-is.
+  rpc Submit(SubmitRequest) returns (SubmitResponse);
+}
