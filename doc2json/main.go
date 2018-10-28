@@ -49,12 +49,8 @@ func readPdf2(path string) (string, error) {
 		var lastTextStyle pdf.Text
 		texts := p.Content().Text
 		for _, text := range texts {
-			if isSameSentence(text, lastTextStyle) {
-				lastTextStyle.S = lastTextStyle.S + text.S
-			} else {
-				fmt.Printf("Font: %s, Font-size: %f, x: %f, y: %f, content: %s \n", lastTextStyle.Font, lastTextStyle.FontSize, lastTextStyle.X, lastTextStyle.Y, lastTextStyle.S)
-				lastTextStyle = text
-			}
+			fmt.Printf("Font: %s, Font-size: %f, x: %f, y: %f, content: %s \n", lastTextStyle.Font, lastTextStyle.FontSize, lastTextStyle.X, lastTextStyle.Y, lastTextStyle.S)
+			lastTextStyle = text
 		}
 	}
 	return "", nil
