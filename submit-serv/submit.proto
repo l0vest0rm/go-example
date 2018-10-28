@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package submit;
 
-message SubmitRequest {
+message PostRequest {
   string uid = 1;
   string pass = 2;
   string url = 3;
@@ -10,7 +10,7 @@ message SubmitRequest {
   string body = 5;
 }
 
-message SubmitResponse {
+message PostResponse {
   int32 code = 1;  
   string message = 2;
 }
@@ -19,5 +19,5 @@ message SubmitResponse {
 service SubmitService {
   // One request followed by one response
   // The server returns the client message as-is.
-  rpc Submit(SubmitRequest) returns (SubmitResponse);
+  rpc Post(PostRequest) returns (PostResponse);
 }

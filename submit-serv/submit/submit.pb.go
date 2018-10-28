@@ -22,7 +22,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type SubmitRequest struct {
+type PostRequest struct {
 	Uid                  string   `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
 	Pass                 string   `protobuf:"bytes,2,opt,name=pass,proto3" json:"pass,omitempty"`
 	Url                  string   `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
@@ -33,67 +33,67 @@ type SubmitRequest struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SubmitRequest) Reset()         { *m = SubmitRequest{} }
-func (m *SubmitRequest) String() string { return proto.CompactTextString(m) }
-func (*SubmitRequest) ProtoMessage()    {}
-func (*SubmitRequest) Descriptor() ([]byte, []int) {
+func (m *PostRequest) Reset()         { *m = PostRequest{} }
+func (m *PostRequest) String() string { return proto.CompactTextString(m) }
+func (*PostRequest) ProtoMessage()    {}
+func (*PostRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_0f5b4b0271dafc7e, []int{0}
 }
 
-func (m *SubmitRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SubmitRequest.Unmarshal(m, b)
+func (m *PostRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostRequest.Unmarshal(m, b)
 }
-func (m *SubmitRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SubmitRequest.Marshal(b, m, deterministic)
+func (m *PostRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostRequest.Marshal(b, m, deterministic)
 }
-func (m *SubmitRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SubmitRequest.Merge(m, src)
+func (m *PostRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostRequest.Merge(m, src)
 }
-func (m *SubmitRequest) XXX_Size() int {
-	return xxx_messageInfo_SubmitRequest.Size(m)
+func (m *PostRequest) XXX_Size() int {
+	return xxx_messageInfo_PostRequest.Size(m)
 }
-func (m *SubmitRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SubmitRequest.DiscardUnknown(m)
+func (m *PostRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SubmitRequest proto.InternalMessageInfo
+var xxx_messageInfo_PostRequest proto.InternalMessageInfo
 
-func (m *SubmitRequest) GetUid() string {
+func (m *PostRequest) GetUid() string {
 	if m != nil {
 		return m.Uid
 	}
 	return ""
 }
 
-func (m *SubmitRequest) GetPass() string {
+func (m *PostRequest) GetPass() string {
 	if m != nil {
 		return m.Pass
 	}
 	return ""
 }
 
-func (m *SubmitRequest) GetUrl() string {
+func (m *PostRequest) GetUrl() string {
 	if m != nil {
 		return m.Url
 	}
 	return ""
 }
 
-func (m *SubmitRequest) GetTitle() string {
+func (m *PostRequest) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *SubmitRequest) GetBody() string {
+func (m *PostRequest) GetBody() string {
 	if m != nil {
 		return m.Body
 	}
 	return ""
 }
 
-type SubmitResponse struct {
+type PostResponse struct {
 	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -101,39 +101,39 @@ type SubmitResponse struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SubmitResponse) Reset()         { *m = SubmitResponse{} }
-func (m *SubmitResponse) String() string { return proto.CompactTextString(m) }
-func (*SubmitResponse) ProtoMessage()    {}
-func (*SubmitResponse) Descriptor() ([]byte, []int) {
+func (m *PostResponse) Reset()         { *m = PostResponse{} }
+func (m *PostResponse) String() string { return proto.CompactTextString(m) }
+func (*PostResponse) ProtoMessage()    {}
+func (*PostResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_0f5b4b0271dafc7e, []int{1}
 }
 
-func (m *SubmitResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_SubmitResponse.Unmarshal(m, b)
+func (m *PostResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostResponse.Unmarshal(m, b)
 }
-func (m *SubmitResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_SubmitResponse.Marshal(b, m, deterministic)
+func (m *PostResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostResponse.Marshal(b, m, deterministic)
 }
-func (m *SubmitResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SubmitResponse.Merge(m, src)
+func (m *PostResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostResponse.Merge(m, src)
 }
-func (m *SubmitResponse) XXX_Size() int {
-	return xxx_messageInfo_SubmitResponse.Size(m)
+func (m *PostResponse) XXX_Size() int {
+	return xxx_messageInfo_PostResponse.Size(m)
 }
-func (m *SubmitResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_SubmitResponse.DiscardUnknown(m)
+func (m *PostResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SubmitResponse proto.InternalMessageInfo
+var xxx_messageInfo_PostResponse proto.InternalMessageInfo
 
-func (m *SubmitResponse) GetCode() int32 {
+func (m *PostResponse) GetCode() int32 {
 	if m != nil {
 		return m.Code
 	}
 	return 0
 }
 
-func (m *SubmitResponse) GetMessage() string {
+func (m *PostResponse) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
@@ -141,27 +141,27 @@ func (m *SubmitResponse) GetMessage() string {
 }
 
 func init() {
-	proto.RegisterType((*SubmitRequest)(nil), "submit.SubmitRequest")
-	proto.RegisterType((*SubmitResponse)(nil), "submit.SubmitResponse")
+	proto.RegisterType((*PostRequest)(nil), "submit.PostRequest")
+	proto.RegisterType((*PostResponse)(nil), "submit.PostResponse")
 }
 
 func init() { proto.RegisterFile("submit.proto", fileDescriptor_0f5b4b0271dafc7e) }
 
 var fileDescriptor_0f5b4b0271dafc7e = []byte{
-	// 195 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x3f, 0x8b, 0xc2, 0x40,
-	0x10, 0xc5, 0xc9, 0xe5, 0xcf, 0x71, 0xc3, 0xdd, 0x21, 0x83, 0xca, 0x62, 0x25, 0xa9, 0xac, 0x52,
-	0x68, 0x61, 0x67, 0x6d, 0x9d, 0x7c, 0x82, 0xfc, 0x19, 0x64, 0x21, 0x71, 0x93, 0x9d, 0x8d, 0xe0,
-	0xb7, 0x97, 0xcc, 0x26, 0x85, 0x76, 0xbf, 0xf7, 0x78, 0xc3, 0xdb, 0xb7, 0xf0, 0xcb, 0x63, 0xd5,
-	0x69, 0x97, 0xf5, 0xd6, 0x38, 0x83, 0x89, 0x57, 0xe9, 0x00, 0x7f, 0x85, 0x50, 0x4e, 0xc3, 0x48,
-	0xec, 0x70, 0x05, 0xe1, 0xa8, 0x1b, 0x15, 0xec, 0x83, 0xc3, 0x4f, 0x3e, 0x21, 0x22, 0x44, 0x7d,
-	0xc9, 0xac, 0xbe, 0xc4, 0x12, 0x96, 0x94, 0x6d, 0x55, 0x38, 0xa7, 0x6c, 0x8b, 0x6b, 0x88, 0x9d,
-	0x76, 0x2d, 0xa9, 0x48, 0x3c, 0x2f, 0xa6, 0xdb, 0xca, 0x34, 0x4f, 0x15, 0xfb, 0xdb, 0x89, 0xd3,
-	0x0b, 0xfc, 0x2f, 0x95, 0xdc, 0x9b, 0x3b, 0x4b, 0xaa, 0x36, 0x0d, 0x49, 0x69, 0x9c, 0x0b, 0xa3,
-	0x82, 0xef, 0x8e, 0x98, 0xcb, 0x1b, 0xcd, 0xc5, 0x8b, 0x3c, 0x5e, 0x97, 0x27, 0x17, 0x64, 0x1f,
-	0xba, 0x26, 0x3c, 0x43, 0xe2, 0x0d, 0xdc, 0x64, 0xf3, 0xc8, 0xb7, 0x4d, 0xbb, 0xed, 0xa7, 0xed,
-	0x7b, 0xab, 0x44, 0xfe, 0xe2, 0xf4, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x22, 0xac, 0xf2, 0xaa, 0x1b,
-	0x01, 0x00, 0x00,
+	// 199 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x90, 0xcd, 0x6a, 0xc3, 0x30,
+	0x10, 0x84, 0x71, 0xfd, 0x53, 0xba, 0x75, 0xa1, 0x6c, 0x7d, 0x10, 0x3d, 0x15, 0x9f, 0x7a, 0x32,
+	0x24, 0xb9, 0xe6, 0x94, 0x27, 0x08, 0xf6, 0x13, 0xf8, 0x67, 0x09, 0x02, 0x3b, 0x72, 0xb4, 0x72,
+	0x20, 0x6f, 0x1f, 0xb4, 0x72, 0x20, 0xb9, 0xcd, 0x0c, 0xb3, 0xfa, 0xb4, 0x0b, 0x39, 0x2f, 0xdd,
+	0xa4, 0x5d, 0x35, 0x5b, 0xe3, 0x0c, 0x66, 0xc1, 0x95, 0x06, 0x3e, 0x8f, 0x86, 0x5d, 0x4d, 0x97,
+	0x85, 0xd8, 0xe1, 0x37, 0xc4, 0x8b, 0x1e, 0x54, 0xf4, 0x17, 0xfd, 0x7f, 0xd4, 0x5e, 0x22, 0x42,
+	0x32, 0xb7, 0xcc, 0xea, 0x4d, 0x22, 0xd1, 0xd2, 0xb2, 0xa3, 0x8a, 0xd7, 0x96, 0x1d, 0xb1, 0x80,
+	0xd4, 0x69, 0x37, 0x92, 0x4a, 0x24, 0x0b, 0xc6, 0xcf, 0x76, 0x66, 0xb8, 0xa9, 0x34, 0xcc, 0x7a,
+	0x5d, 0xee, 0x21, 0x0f, 0x40, 0x9e, 0xcd, 0x99, 0xa5, 0xd3, 0x9b, 0x81, 0x04, 0x99, 0xd6, 0xa2,
+	0x51, 0xc1, 0xfb, 0x44, 0xcc, 0xed, 0x89, 0x56, 0xec, 0xc3, 0x6e, 0x0f, 0xf0, 0xd5, 0xc8, 0xc7,
+	0x1b, 0xb2, 0x57, 0xdd, 0x13, 0x6e, 0x20, 0xf1, 0xcf, 0xe1, 0x4f, 0xb5, 0xae, 0xf7, 0xb4, 0xcd,
+	0x6f, 0xf1, 0x1a, 0x06, 0x62, 0x97, 0xc9, 0x05, 0x76, 0xf7, 0x00, 0x00, 0x00, 0xff, 0xff, 0x0d,
+	0x3d, 0x3e, 0xc2, 0x11, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -178,7 +178,7 @@ const _ = grpc.SupportPackageIsVersion4
 type SubmitServiceClient interface {
 	// One request followed by one response
 	// The server returns the client message as-is.
-	Submit(ctx context.Context, in *SubmitRequest, opts ...grpc.CallOption) (*SubmitResponse, error)
+	Post(ctx context.Context, in *PostRequest, opts ...grpc.CallOption) (*PostResponse, error)
 }
 
 type submitServiceClient struct {
@@ -189,9 +189,9 @@ func NewSubmitServiceClient(cc *grpc.ClientConn) SubmitServiceClient {
 	return &submitServiceClient{cc}
 }
 
-func (c *submitServiceClient) Submit(ctx context.Context, in *SubmitRequest, opts ...grpc.CallOption) (*SubmitResponse, error) {
-	out := new(SubmitResponse)
-	err := c.cc.Invoke(ctx, "/submit.SubmitService/Submit", in, out, opts...)
+func (c *submitServiceClient) Post(ctx context.Context, in *PostRequest, opts ...grpc.CallOption) (*PostResponse, error) {
+	out := new(PostResponse)
+	err := c.cc.Invoke(ctx, "/submit.SubmitService/Post", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -202,27 +202,27 @@ func (c *submitServiceClient) Submit(ctx context.Context, in *SubmitRequest, opt
 type SubmitServiceServer interface {
 	// One request followed by one response
 	// The server returns the client message as-is.
-	Submit(context.Context, *SubmitRequest) (*SubmitResponse, error)
+	Post(context.Context, *PostRequest) (*PostResponse, error)
 }
 
 func RegisterSubmitServiceServer(s *grpc.Server, srv SubmitServiceServer) {
 	s.RegisterService(&_SubmitService_serviceDesc, srv)
 }
 
-func _SubmitService_Submit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubmitRequest)
+func _SubmitService_Post_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SubmitServiceServer).Submit(ctx, in)
+		return srv.(SubmitServiceServer).Post(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/submit.SubmitService/Submit",
+		FullMethod: "/submit.SubmitService/Post",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SubmitServiceServer).Submit(ctx, req.(*SubmitRequest))
+		return srv.(SubmitServiceServer).Post(ctx, req.(*PostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -232,8 +232,8 @@ var _SubmitService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*SubmitServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Submit",
-			Handler:    _SubmitService_Submit_Handler,
+			MethodName: "Post",
+			Handler:    _SubmitService_Post_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	port = ":50051"
+	port = ":8080"
 )
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
 // SayHello implements helloworld.GreeterServer
-func (t *server) Submit(ctx context.Context, req *submit.SubmitRequest) (rsp *submit.SubmitResponse, err error) {
+func (t *server) Post(ctx context.Context, req *submit.PostRequest) (rsp *submit.PostResponse, err error) {
 	fmt.Printf("%s,%s,%s\n", req.GetUrl(), req.GetTitle(), req.GetBody())
-	return &submit.SubmitResponse{Code: 0, Message: ""}, nil
+	return &submit.PostResponse{Code: 0, Message: ""}, nil
 }
 
 func main() {
