@@ -3,37 +3,44 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
 
+	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/l0vest0rm/go-example/submit-serv/submit"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
-	port = ":8080"
+	addr = ":8080"
 )
 
 // server is used to implement helloworld.GreeterServer.
-type server struct{}
+type SubmitServiceHandler struct{}
+
+func NewSubmitServiceHandler() *SubmitServiceHandler {
+	return &SubmitServiceHandler{}
+}
+
+func (t *SubmitServiceHandler) Ping(ctx context.Context) (err error) {
+	return nil
+}
 
 // SayHello implements helloworld.GreeterServer
-func (t *server) Post(ctx context.Context, req *submit.PostRequest) (rsp *submit.PostResponse, err error) {
-	fmt.Printf("%s,%s,%s\n", req.GetUrl(), req.GetTitle(), req.GetBody())
-	return &submit.PostResponse{Code: 0, Message: ""}, nil
+func (t *SubmitServiceHandler) Submit(ctx context.Context, req *submit.SubmitRequest) (r *submit.SubmitResponse, err error) {
+	fmt.Printf("%s,%s,%s\n", req.GetURL(), req.GetTitle, req.GetBody())
+	return &submit.SubmitResponse{Code: 0, Message: ""}, nil
 }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+	transport, err := thrift.NewTServerSocket(addr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		panic(err)
 	}
-	s := grpc.NewServer()
-	submit.RegisterSubmitServiceServer(s, &server{})
-	// Register reflection service on gRPC server.
-	reflection.Register(s)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+
+	handler := NewSubmitServiceHandler()
+	processor := submit.NewSubmitServiceProcessor(handler)
+	transportFactory := thrift.NewTTransportFactory()
+	protocolFactory := thrift.NewTJSONProtocolFactory()
+	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)
+
+	fmt.Println("Starting the simple server... on ", addr)
+	server.Serve()
 }
