@@ -6,8 +6,6 @@ import (
 
 func main() {
 	fmt.Println("ok")
-
-	cards := NewCards()
-	cards.Shuffle()
-	cards.PrintCards()
+	game := NewGame(RED_TEN, 5)
+	game.Cards.PrintCards()
 }

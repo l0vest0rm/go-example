@@ -9,6 +9,8 @@ import (
 // ICards 牌接口
 type ICards interface {
 	Shuffle()
+	Vals() []int
+	SetVals(vals []int)
 	PrintCards()
 }
 
@@ -31,18 +33,6 @@ func NewCards() ICards {
 }
 
 // Shuffle 洗牌
-func (t *cards) Shuffle1() {
-	vals := t.vals
-	r := rand.New(rand.NewSource(time.Now().Unix())) //根据系统时间戳初始化Random
-	for len(vals) > 0 {                              //根据牌面数组长度遍历
-		n := len(vals)                                          //数组长度
-		randIndex := r.Intn(n)                                  //得到随机index
-		vals[n-1], vals[randIndex] = vals[randIndex], vals[n-1] //最后一张牌和第randIndex张牌互换
-		vals = vals[:n-1]
-	}
-}
-
-// Shuffle 洗牌
 func (t *cards) Shuffle() {
 	r := rand.New(rand.NewSource(time.Now().Unix())) //根据系统时间戳初始化Random
 	for n := len(t.vals); n > 0; n-- {
@@ -51,8 +41,17 @@ func (t *cards) Shuffle() {
 	}
 }
 
+// Vals 值
+func (t *cards) Vals() []int {
+	return t.vals
+}
+
+func (t *cards) SetVals(vals []int) {
+	t.vals = vals
+}
+
 func (t *cards) PrintCards() {
-	for i := 0; i < 54; i++ {
+	for i := 0; i < len(t.vals); i++ {
 		fmt.Printf("%s,", ConvertVal2Str(t.vals[i]))
 	}
 }
