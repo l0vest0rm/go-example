@@ -6,6 +6,8 @@ import (
 
 func main() {
 	fmt.Println("ok")
-	game := NewGame(RED_TEN, 5)
-	game.Cards.PrintCards()
+	game := NewRedTen(5)
+	PrintCards(game.Vals())
+	game.PrintPlayersRemainCards()
+	game.Run()
 }
