@@ -30,7 +30,23 @@ func Shuffle(vals []int) {
 
 func PrintCards(vals []int) {
 	for i := 0; i < len(vals); i++ {
-		fmt.Printf("%s,", ConvertVal2Str(vals[i]))
+		fmt.Printf("%s,", ConvertVal2PrintChars(vals[i]))
+	}
+}
+
+func ConvertVal2PrintChars(val int) string {
+	if val == 0 {
+		return "King"
+	} else if val < 14 {
+		return fmt.Sprintf("♥%d", val)
+	} else if val < 27 {
+		return fmt.Sprintf("♠%d", val-13)
+	} else if val < 40 {
+		return fmt.Sprintf("♣%d", val-26)
+	} else if val < 53 {
+		return fmt.Sprintf("♦%d", val-39)
+	} else {
+		return "Queen"
 	}
 }
 

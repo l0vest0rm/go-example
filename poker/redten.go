@@ -108,17 +108,19 @@ func (t *RedTen) Run() {
 	i := t.chooseBeginPlayer()
 	prePlayer := i
 	for {
-		if i == 0 {
-			t.PrintPlayersRemainCards()
-		}
-		if prePlayer == i {
-			init = true
-		} else {
-			init = false
-		}
-		cards := t.playerHand(i, init)
-		if cards != nil {
-			prePlayer = i
+		if len(t.players[i].remainCards) > 0 {
+			if i == 0 {
+				t.PrintPlayersRemainCards()
+			}
+			if prePlayer == i {
+				init = true
+			} else {
+				init = false
+			}
+			cards := t.playerHand(i, init)
+			if cards != nil {
+				prePlayer = i
+			}
 		}
 		i = t.nextPlayer(i)
 	}
@@ -179,18 +181,11 @@ func (t *RedTen) playerHand(playerId int, init bool) []int {
 func (t *RedTen) botHand(playerId int, init bool) []int {
 	var cards []int
 	if init {
-		cards = []int{t.players[playerId].remainCards[0]}
+		cards = findMultiSame(t.players[playerId].remainCards, t.players[playerId].remainCards[0])
 	} else {
 		preHand := t.hands[len(t.hands)-1]
 		player := t.players[playerId]
-		//找一个刚好大过上家的
-		l := len(player.remainCards)
-		for i := 0; i < l; i++ {
-			if valsMap[preHand.cards[0]] < valsMap[player.remainCards[i]] {
-				cards = append(cards, player.remainCards[i])
-				break
-			}
-		}
+		cards = findJustBiggerN(player.remainCards, preHand.cards[0], len(preHand.cards))
 	}
 
 	fmt.Printf("player%d hand:%v\n", playerId, ConvertVals2Strs(cards))
@@ -229,6 +224,62 @@ func (t *RedTen) convertStr2Val(input string) ([]int, error) {
 	}
 
 	return vals, nil
+}
+
+func findMultiSame(cards []int, card int) (vals []int) {
+	for i := 0; i < len(cards); i++ {
+		if valsMap[cards[i]] == valsMap[card] {
+			if vals == nil {
+				vals = make([]int, 0)
+			}
+			vals = append(vals, cards[i])
+		} else if valsMap[cards[i]] > valsMap[card] {
+			break
+		}
+	}
+
+	return vals
+}
+
+func findJustBiggerOne(cards []int, card int) (vals []int) {
+	//找一个刚好大过上家的
+	l := len(cards)
+	for i := 0; i < l; i++ {
+		if valsMap[card] < valsMap[cards[i]] {
+			if vals == nil {
+				vals = make([]int, 0)
+			}
+			vals = append(vals, cards[i])
+			break
+		}
+	}
+	return vals
+}
+
+func findJustBiggerN(cards []int, card int, n int) (vals []int) {
+	//找一个刚好大过上家的
+	l := len(cards)
+	sameNum := 0
+	preVal := -1
+	for i := 0; i < l; i++ {
+		if valsMap[card] >= valsMap[cards[i]] {
+			continue
+		}
+
+		if sameNum == 0 || valsMap[cards[i]] == preVal {
+			sameNum += 1
+			preVal = valsMap[cards[i]]
+		}
+
+		if sameNum == n {
+			vals = make([]int, 0)
+			for j := 0; j < n; j++ {
+				vals = append(vals, cards[i-j])
+			}
+			break
+		}
+	}
+	return vals
 }
 
 //Len()
