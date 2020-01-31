@@ -96,9 +96,20 @@ func (t *RedTen) Dispacther() {
 }
 
 func (t *RedTen) PrintPlayersRemainCards() {
+	n := 99
 	for i := 0; i < t.playerNum; i++ {
-		fmt.Printf("\nplayer%d:", i)
-		PrintCards(t.players[i].remainCards)
+		if len(t.players[i].remainCards) > 3 {
+			n = 99
+		} else {
+			n = len(t.players[i].remainCards)
+		}
+
+		if i == 0 {
+			fmt.Printf("\nplayer%d,有%d张牌:", i, len(t.players[i].remainCards))
+			PrintCards(t.players[i].remainCards)
+		} else {
+			fmt.Printf("\nplayer%d,有%d张牌", i, n)
+		}
 	}
 }
 
@@ -112,7 +123,7 @@ func (t *RedTen) Run() {
 	for {
 		i = t.nextPlayer(i)
 		if i == -1 {
-			fmt.Println("game over")
+			fmt.Println("\ngame over")
 			break
 		}
 		if prePlayer == -1 {
@@ -126,7 +137,7 @@ func (t *RedTen) Run() {
 		}
 
 		if dutyPlayer == i {
-			fmt.Printf("player%d 蹲我\n", i)
+			fmt.Printf("\nplayer%d 蹲我", i)
 			init = true
 			dutyPlayer = -1
 		}
@@ -142,11 +153,12 @@ func (t *RedTen) Run() {
 
 		cards := t.playerHand(i, init)
 		if cards != nil {
+			fmt.Printf("\nplayer%d hand:%v", i, ConvertVals2PrintChars(cards))
 			prePlayer = i
 			dutyPlayer = -1
 			//看是否出完了
 			if len(t.players[i].remainCards) == 0 {
-				fmt.Printf("player%d 走了\n", i)
+				fmt.Printf("\nplayer%d 走了", i)
 				checkDuty = true
 			} else {
 				checkDuty = false
@@ -228,7 +240,6 @@ func (t *RedTen) botHand(playerId int, init bool) []int {
 		cards = findJustBiggerN(player.remainCards, preHand.cards[0], len(preHand.cards))
 	}
 
-	fmt.Printf("player%d hand:%v\n", playerId, ConvertVals2PrintChars(cards))
 	return cards
 }
 
@@ -237,7 +248,7 @@ func (t *RedTen) humanHand(playerId int) []int {
 	var input string
 	fmt.Println("\n请出牌:")
 	fmt.Scanln(&input)
-	fmt.Printf("player%d hand:%s\n", playerId, input)
+	//fmt.Printf("player%d hand:%s\n", playerId, input)
 	if input == "" {
 		//跳过不出
 		return nil

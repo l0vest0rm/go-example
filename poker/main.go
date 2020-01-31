@@ -12,10 +12,8 @@ func test() {
 }
 
 func main() {
-	test()
-	fmt.Println("ok")
 	game := NewRedTen(5)
-	PrintCards(game.Vals())
+	//PrintCards(game.Vals())
 	game.PrintPlayersRemainCards()
 	game.Run()
 
