@@ -5,7 +5,18 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/fatih/color"
+)
+
+var (
+	red    = color.New(color.FgRed).SprintFunc()
+	yellow = color.New(color.FgYellow).SprintFunc()
+	blue   = color.New(color.FgBlue).SprintFunc()
+	green  = color.New(color.FgGreen).SprintFunc()
+	cyan   = color.New(color.FgCyan).SprintFunc()
 )
 
 // NewCards 构造一局新牌
@@ -36,17 +47,17 @@ func PrintCards(vals []int) {
 
 func ConvertVal2PrintChars(val int) string {
 	if val == 0 {
-		return "King"
+		return red("King")
 	} else if val < 14 {
-		return fmt.Sprintf("♥%d", val)
+		return fmt.Sprintf("%s%d", red("♥"), val)
 	} else if val < 27 {
-		return fmt.Sprintf("♠%d", val-13)
+		return fmt.Sprintf("%s%d", blue("♠"), val-13)
 	} else if val < 40 {
-		return fmt.Sprintf("♣%d", val-26)
+		return fmt.Sprintf("%s%d", green("♣"), val-26)
 	} else if val < 53 {
-		return fmt.Sprintf("♦%d", val-39)
+		return fmt.Sprintf("%s%d", yellow("♦"), val-39)
 	} else {
-		return "Queen"
+		return cyan("Queen")
 	}
 }
 
@@ -67,16 +78,16 @@ func ConvertVal2Str(val int) string {
 	}
 }
 
-func ConvertVals2Strs(vals []int) []string {
+func ConvertVals2PrintChars(vals []int) []string {
 	strs := make([]string, 0)
 	for _, val := range vals {
-		strs = append(strs, ConvertVal2Str(val))
+		strs = append(strs, ConvertVal2PrintChars(val))
 	}
 	return strs
 }
 
 func ConvertStr2Val(str string) (int, error) {
-	color := str[:1]
+	color := strings.ToUpper(str[:1])
 	numStr := str[1:]
 	num, err := strconv.Atoi(numStr)
 	if err != nil {

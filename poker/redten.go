@@ -105,24 +105,53 @@ func (t *RedTen) PrintPlayersRemainCards() {
 // Run 开始运行，假设player0是真人，其它是机器人
 func (t *RedTen) Run() {
 	init := false
-	i := t.chooseBeginPlayer()
+	i := -1
 	prePlayer := i
+	checkDuty := false
+	dutyPlayer := -1 //上一个走的人
 	for {
-		if len(t.players[i].remainCards) > 0 {
-			if i == 0 {
-				t.PrintPlayersRemainCards()
-			}
-			if prePlayer == i {
-				init = true
+		i = t.nextPlayer(i)
+		if i == -1 {
+			fmt.Println("game over")
+			break
+		}
+		if prePlayer == -1 {
+			prePlayer = i
+		}
+
+		if prePlayer == i {
+			init = true
+		} else {
+			init = false
+		}
+
+		if dutyPlayer == i {
+			fmt.Printf("player%d 蹲我\n", i)
+			init = true
+			dutyPlayer = -1
+		}
+
+		if checkDuty {
+			checkDuty = false
+			dutyPlayer = i
+		}
+
+		if i == 0 {
+			t.PrintPlayersRemainCards()
+		}
+
+		cards := t.playerHand(i, init)
+		if cards != nil {
+			prePlayer = i
+			dutyPlayer = -1
+			//看是否出完了
+			if len(t.players[i].remainCards) == 0 {
+				fmt.Printf("player%d 走了\n", i)
+				checkDuty = true
 			} else {
-				init = false
-			}
-			cards := t.playerHand(i, init)
-			if cards != nil {
-				prePlayer = i
+				checkDuty = false
 			}
 		}
-		i = t.nextPlayer(i)
 	}
 }
 
@@ -140,7 +169,18 @@ func (t *RedTen) chooseBeginPlayer() int {
 }
 
 func (t *RedTen) nextPlayer(playerId int) int {
-	return (playerId + 1) % t.playerNum
+	if playerId == -1 {
+		return t.chooseBeginPlayer()
+	}
+
+	for i := 0; i < t.playerNum; i++ {
+		playerId = (playerId + 1) % t.playerNum
+		if len(t.players[playerId].remainCards) > 0 {
+			return playerId
+		}
+	}
+
+	return -1
 }
 
 // 出一手牌,如果返回空表示不出
@@ -188,7 +228,7 @@ func (t *RedTen) botHand(playerId int, init bool) []int {
 		cards = findJustBiggerN(player.remainCards, preHand.cards[0], len(preHand.cards))
 	}
 
-	fmt.Printf("player%d hand:%v\n", playerId, ConvertVals2Strs(cards))
+	fmt.Printf("player%d hand:%v\n", playerId, ConvertVals2PrintChars(cards))
 	return cards
 }
 
