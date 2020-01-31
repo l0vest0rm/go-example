@@ -16,6 +16,11 @@ type IGame interface {
 	PrintPlayersRemainCards()
 }
 
+// IStrategy 策略接口
+type IStrategy interface {
+	Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int
+}
+
 type RedTen struct {
 	vals      []int
 	playerNum int
@@ -24,13 +29,21 @@ type RedTen struct {
 }
 
 type Player struct {
+	initCards   CardsVals
 	remainCards CardsVals
+	strategy    IStrategy
 }
 
 type Hand struct {
 	init     bool
 	playerId int
 	cards    []int
+}
+
+type Robot1 struct {
+}
+
+type Human struct {
 }
 
 var (
@@ -52,8 +65,14 @@ func NewRedTen(playerNum int) IGame {
 	t.ModVals()
 	Shuffle(t.vals)
 
+	var strategy IStrategy
 	for i := 0; i < t.playerNum; i++ {
-		t.players = append(t.players, &Player{remainCards: make([]int, 0)})
+		if i == -1 {
+			strategy = NewHuman()
+		} else {
+			strategy = NewRobot1()
+		}
+		t.players = append(t.players, &Player{initCards: make([]int, 0), strategy: strategy})
 	}
 
 	//发牌
@@ -85,13 +104,15 @@ func (t *RedTen) ModVals() {
 func (t *RedTen) Dispacther() {
 	idx := 0
 	for i := 0; i < len(t.vals); i++ {
-		t.players[idx].remainCards = append(t.players[idx].remainCards, t.vals[i])
+		t.players[idx].initCards = append(t.players[idx].initCards, t.vals[i])
 		idx = (idx + 1) % t.playerNum
 	}
 
 	//排序
 	for i := 0; i < t.playerNum; i++ {
-		sort.Sort(t.players[i].remainCards)
+		sort.Sort(t.players[i].initCards)
+		t.players[i].remainCards = make([]int, len(t.players[i].initCards))
+		copy(t.players[i].remainCards, t.players[i].initCards)
 	}
 }
 
@@ -113,6 +134,13 @@ func (t *RedTen) PrintPlayersRemainCards() {
 	}
 }
 
+func (t *RedTen) PrintPlayersInitCards() {
+	for i := 0; i < t.playerNum; i++ {
+		fmt.Printf("\nplayer%d:", i)
+		PrintCards(t.players[i].initCards)
+	}
+}
+
 // Run 开始运行，假设player0是真人，其它是机器人
 func (t *RedTen) Run() {
 	init := false
@@ -124,6 +152,7 @@ func (t *RedTen) Run() {
 		i = t.nextPlayer(i)
 		if i == -1 {
 			fmt.Println("\ngame over")
+			t.PrintPlayersInitCards()
 			break
 		}
 		if prePlayer == -1 {
@@ -197,13 +226,7 @@ func (t *RedTen) nextPlayer(playerId int) int {
 
 // 出一手牌,如果返回空表示不出
 func (t *RedTen) playerHand(playerId int, init bool) []int {
-	var cards []int
-	if playerId == 0 {
-		cards = t.humanHand(playerId)
-	} else {
-		cards = t.botHand(playerId, init)
-	}
-
+	cards := t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards)
 	if cards == nil {
 		return cards
 	}
@@ -229,42 +252,8 @@ func (t *RedTen) playerHand(playerId int, init bool) []int {
 	return cards
 }
 
-// 机器人出牌
-func (t *RedTen) botHand(playerId int, init bool) []int {
-	var cards []int
-	if init {
-		cards = findMultiSame(t.players[playerId].remainCards, t.players[playerId].remainCards[0])
-	} else {
-		preHand := t.hands[len(t.hands)-1]
-		player := t.players[playerId]
-		cards = findJustBiggerN(player.remainCards, preHand.cards[0], len(preHand.cards))
-	}
-
-	return cards
-}
-
-// 人出牌
-func (t *RedTen) humanHand(playerId int) []int {
-	var input string
-	fmt.Println("\n请出牌:")
-	fmt.Scanln(&input)
-	//fmt.Printf("player%d hand:%s\n", playerId, input)
-	if input == "" {
-		//跳过不出
-		return nil
-	}
-	vals, err := t.convertStr2Val(input)
-	if err != nil {
-		fmt.Println("出牌有误,", err)
-		return t.humanHand(playerId)
-	}
-
-	return vals
-}
-
-func (t *RedTen) convertStr2Val(input string) ([]int, error) {
+func convertStr2Val(input string) ([]int, error) {
 	cards := strings.Split(input, ",")
-	fmt.Println(len(cards))
 	vals := make([]int, 0)
 	for i := 0; i < len(cards); i++ {
 		val, err := ConvertStr2Val(cards[i])
@@ -346,4 +335,48 @@ func (t CardsVals) Less(i, j int) bool {
 //Swap()
 func (t CardsVals) Swap(i, j int) {
 	t[i], t[j] = t[j], t[i]
+}
+
+// 策略
+
+func NewHuman() IStrategy {
+	player := &Human{}
+	return player
+}
+
+// 人出牌
+func (t *Human) Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int {
+	var input string
+	fmt.Println("\n请出牌:")
+	fmt.Scanln(&input)
+	//fmt.Printf("player%d hand:%s\n", playerId, input)
+	if input == "" {
+		//跳过不出
+		return nil
+	}
+	vals, err := convertStr2Val(input)
+	if err != nil {
+		fmt.Println("出牌有误,", err)
+		return t.Hand(playerId, init, hands, remainCards)
+	}
+
+	return vals
+}
+
+func NewRobot1() IStrategy {
+	player := &Robot1{}
+	return player
+}
+
+// 机器人出牌
+func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int {
+	var cards []int
+	if init {
+		cards = findMultiSame(remainCards, remainCards[0])
+	} else {
+		preHand := hands[len(hands)-1]
+		cards = findJustBiggerN(remainCards, preHand.cards[0], len(preHand.cards))
+	}
+
+	return cards
 }
