@@ -11,7 +11,7 @@ type CardsVals []int
 // IGame 游戏局接口
 type IGame interface {
 	Dispacther()
-	Run()
+	Run() []int
 	Vals() []int
 	PrintPlayersRemainCards()
 }
@@ -22,16 +22,19 @@ type IStrategy interface {
 }
 
 type RedTen struct {
-	vals      []int
-	playerNum int
-	hands     []*Hand
-	players   []*Player
+	vals           []int
+	playerNum      int
+	totalRedTenNum int
+	hands          []*Hand
+	players        []*Player
 }
 
 type Player struct {
 	initCards   CardsVals
 	remainCards CardsVals
 	strategy    IStrategy
+	redTenCnt   int
+	rank        int
 }
 
 type Hand struct {
@@ -54,25 +57,26 @@ var (
 		14, 20, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 		14, 20, 3, 4, 5, 6, 7, 8, 9, 30, 11, 12, 13,
 		80}
+	strategys = []func() IStrategy{
+		NewHuman,
+		NewRobot1,
+	}
 )
 
-func NewRedTen(playerNum int) IGame {
+func NewRedTen(players []int) IGame {
 	vals := NewCards()
-	t := &RedTen{playerNum: playerNum,
+	t := &RedTen{playerNum: len(players),
 		vals:    vals,
 		hands:   make([]*Hand, 0),
 		players: make([]*Player, 0)}
 	t.ModVals()
 	Shuffle(t.vals)
+	if t.playerNum == 4 || t.playerNum == 5 {
+		t.totalRedTenNum = 2
+	}
 
-	var strategy IStrategy
 	for i := 0; i < t.playerNum; i++ {
-		if i == -1 {
-			strategy = NewHuman()
-		} else {
-			strategy = NewRobot1()
-		}
-		t.players = append(t.players, &Player{initCards: make([]int, 0), strategy: strategy})
+		t.players = append(t.players, &Player{initCards: make([]int, 0), strategy: strategys[players[i]]()})
 	}
 
 	//发牌
@@ -113,7 +117,28 @@ func (t *RedTen) Dispacther() {
 		sort.Sort(t.players[i].initCards)
 		t.players[i].remainCards = make([]int, len(t.players[i].initCards))
 		copy(t.players[i].remainCards, t.players[i].initCards)
+		t.players[i].redTenCnt = redTenCnt(t.players[i].initCards)
+		//fmt.Println(i, t.players[i])
 	}
+}
+
+func isRedTen(card int) bool {
+	if card == 10 || card == 49 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func redTenCnt(cards []int) int {
+	redTenCnt := 0
+	for _, card := range cards {
+		if isRedTen(card) {
+			redTenCnt += 1
+		}
+	}
+
+	return redTenCnt
 }
 
 func (t *RedTen) PrintPlayersRemainCards() {
@@ -126,34 +151,113 @@ func (t *RedTen) PrintPlayersRemainCards() {
 		}
 
 		if i == 0 {
-			fmt.Printf("\nplayer%d,有%d张牌:", i, len(t.players[i].remainCards))
+			Printf("\nplayer%d,有%d张牌:", i, len(t.players[i].remainCards))
 			PrintCards(t.players[i].remainCards)
 		} else {
-			fmt.Printf("\nplayer%d,有%d张牌", i, n)
+			Printf("\nplayer%d,有%d张牌", i, n)
 		}
 	}
 }
 
 func (t *RedTen) PrintPlayersInitCards() {
 	for i := 0; i < t.playerNum; i++ {
-		fmt.Printf("\nplayer%d:", i)
+		Printf("\nplayer%d,rank:%d,", i, t.players[i].rank)
 		PrintCards(t.players[i].initCards)
 	}
 }
 
+func (t *RedTen) CalcScores() []int {
+	scores := make([]int, t.playerNum, t.playerNum)
+
+	hasRedTenScore := 0
+	noRedTenScore := 0
+	loserCnt := 0
+	totalLoserRedTenCnt := 0
+
+	//找大旗
+	first := t.findRank(1)
+	firstRedTenCnt := t.players[first].redTenCnt
+	//看抓到几个
+	for n := t.playerNum; n > 0; n-- {
+		loser := t.findRank(n)
+		if t.players[loser].redTenCnt == firstRedTenCnt {
+			//同伙
+			break
+		}
+		loserCnt += 1
+		totalLoserRedTenCnt += t.players[loser].redTenCnt
+	}
+
+	switch loserCnt {
+	case 0:
+	case 1:
+		if firstRedTenCnt > 0 {
+			//红十先走
+			hasRedTenScore = 3
+			noRedTenScore = -2
+		} else {
+			//红十被抓
+			if totalLoserRedTenCnt == 1 {
+				hasRedTenScore = -3
+				noRedTenScore = 2
+			} else {
+				//双红十被抓
+				hasRedTenScore = -32
+				noRedTenScore = 8
+			}
+		}
+	case 2:
+		if firstRedTenCnt > 0 {
+			//红十先走
+			hasRedTenScore = 6
+			noRedTenScore = -4
+		} else {
+			//红十被抓
+			hasRedTenScore = -9
+			noRedTenScore = 6
+		}
+	case 3:
+		//红十先走
+		hasRedTenScore = 9
+		noRedTenScore = -6
+	default:
+		panic("loserCnt wrong")
+	}
+
+	for i := 0; i < t.playerNum; i++ {
+		if t.players[i].redTenCnt > 0 {
+			scores[i] = hasRedTenScore
+		} else {
+			scores[i] = noRedTenScore
+		}
+	}
+	return scores
+}
+
+func (t *RedTen) findRank(rank int) int {
+	for i := 0; i < t.playerNum; i++ {
+		if t.players[i].rank == rank {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // Run 开始运行，假设player0是真人，其它是机器人
-func (t *RedTen) Run() {
+func (t *RedTen) Run() []int {
 	init := false
 	i := -1
 	prePlayer := i
 	checkDuty := false
 	dutyPlayer := -1 //上一个走的人
+	rank := 1
 	for {
 		i = t.nextPlayer(i)
 		if i == -1 {
-			fmt.Println("\ngame over")
+			Println("\ngame over")
 			t.PrintPlayersInitCards()
-			break
+			return t.CalcScores()
 		}
 		if prePlayer == -1 {
 			prePlayer = i
@@ -166,7 +270,7 @@ func (t *RedTen) Run() {
 		}
 
 		if dutyPlayer == i {
-			fmt.Printf("\nplayer%d 蹲我", i)
+			Printf("\nplayer%d 蹲我", i)
 			init = true
 			dutyPlayer = -1
 		}
@@ -182,12 +286,14 @@ func (t *RedTen) Run() {
 
 		cards := t.playerHand(i, init)
 		if cards != nil {
-			fmt.Printf("\nplayer%d hand:%v", i, ConvertVals2PrintChars(cards))
+			Printf("\nplayer%d hand:%v", i, ConvertVals2PrintChars(cards))
 			prePlayer = i
 			dutyPlayer = -1
 			//看是否出完了
 			if len(t.players[i].remainCards) == 0 {
-				fmt.Printf("\nplayer%d 走了", i)
+				Printf("\nplayer%d 走了", i)
+				t.players[i].rank = rank
+				rank += 1
 				checkDuty = true
 			} else {
 				checkDuty = false

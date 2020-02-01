@@ -32,7 +32,7 @@ func NewCards() []int {
 
 // Shuffle 洗牌
 func Shuffle(vals []int) {
-	r := rand.New(rand.NewSource(time.Now().Unix())) //根据系统时间戳初始化Random
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) //根据系统时间戳初始化Random
 	for n := len(vals); n > 0; n-- {
 		randIndex := r.Intn(n)                                  //得到随机index
 		vals[n-1], vals[randIndex] = vals[randIndex], vals[n-1] //最后一张牌和第randIndex张牌互换
@@ -41,7 +41,7 @@ func Shuffle(vals []int) {
 
 func PrintCards(vals []int) {
 	for i := 0; i < len(vals); i++ {
-		fmt.Printf("%s,", ConvertVal2PrintChars(vals[i]))
+		Printf("%s,", ConvertVal2PrintChars(vals[i]))
 	}
 }
 
