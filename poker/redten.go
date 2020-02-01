@@ -220,8 +220,12 @@ func (t *RedTen) CalcScores() []int {
 		//红十先走
 		hasRedTenScore = 9
 		noRedTenScore = -6
+	case 4:
+		//红十先走
+		hasRedTenScore = 32
+		noRedTenScore = -8
 	default:
-		panic("loserCnt wrong")
+		panic(fmt.Sprintf("loserCnt wrong:%d", loserCnt))
 	}
 
 	for i := 0; i < t.playerNum; i++ {

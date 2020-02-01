@@ -12,7 +12,7 @@ func batchTrain(batch int) {
 		for j := 0; j < len(scores); j++ {
 			totalScores[j] += scores[j]
 		}
-		if i%100 == 0 {
+		if i%1000 == 0 {
 			fmt.Printf("batch%d,totalScores:%v", i, totalScores)
 		}
 	}
@@ -20,5 +20,5 @@ func batchTrain(batch int) {
 }
 
 func main() {
-	batchTrain(1000)
+	batchTrain(10000)
 }
