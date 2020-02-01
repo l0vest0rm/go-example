@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, user-scalable=no;" />
+  <title>斗地主</title>
+  <script type="text/javascript" src="/static/js/phaser.min.js"></script>
+  <script type="text/javascript" src="/static/js/phaser-input.min.js"></script>
+  <script type="text/javascript" src="/static/js/boot.js"></script>
+  <script type="text/javascript" src="/static/js/game.js"></script>
+  <script type="text/javascript" src="/static/js/rule.js"></script>
+  <script type="text/javascript" src="/static/js/player.js"></script>
+  <script type="text/javascript" src="/static/js/player_net.js"></script>
+  <script type="text/javascript" src="/static/js/net.js"></script>
+  <style type="text/css">
+    body {
+      padding: 0;
+      margin: 0;
+      background-color: black;
+    }
+
+    #game {
+      margin: auto;
+    }
+  </style>
+  <style>
+    #forkongithub a {
+      background: #437C17;
+      color: #fff;
+      text-decoration: none;
+      font-family: arial, sans-serif;
+      text-align: center;
+      font-weight: bold;
+      padding: 5px 40px;
+      font-size: 1rem;
+      line-height: 2rem;
+      position: relative;
+      transition: 0.5s;
+    }
+
+    #forkongithub a:hover {
+      background: #51187D;
+      color: #fff;
+    }
+
+    #forkongithub a::before,
+    #forkongithub a::after {
+      content: "";
+      width: 100%;
+      display: block;
+      position: absolute;
+      top: 1px;
+      left: 0;
+      height: 1px;
+      background: #fff;
+    }
+
+    #forkongithub a::after {
+      bottom: 1px;
+      top: auto;
+    }
+
+    @media screen and (min-width:800px) {
+      #forkongithub {
+        position: fixed;
+        display: block;
+        top: 0;
+        right: 0;
+        width: 200px;
+        overflow: hidden;
+        height: 200px;
+        z-index: 9999;
+      }
+
+      #forkongithub a {
+        width: 200px;
+        position: absolute;
+        top: 60px;
+        right: -60px;
+        transform: rotate(45deg);
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <style>
+    .github-corner:hover .octo-arm {
+      animation: octocat-wave 560ms ease-in-out
+    }
+
+    @keyframes octocat-wave {
+
+      0%,
+      100% {
+        transform: rotate(0)
+      }
+
+      20%,
+      60% {
+        transform: rotate(-25deg)
+      }
+
+      40%,
+      80% {
+        transform: rotate(10deg)
+      }
+    }
+
+    @media (max-width:500px) {
+      .github-corner:hover .octo-arm {
+        animation: none
+      }
+
+      .github-corner .octo-arm {
+        animation: octocat-wave 560ms ease-in-out
+      }
+    }
+  </style>
+  <div id="game"></div>
+  <div id="orientation"></div>
+  <input id="user" type="hidden" value="{&quot;uid&quot;: 1710, &quot;username&quot;: &quot;1841789078&quot;}">
+  <script>
+    (function () {
+      var h = window.innerHeight * 960 / window.innerWidth;
+      if (h > 540) h = 540;
+      var game = new Phaser.Game(960, h, Phaser.AUTO, 'game');
+      game.state.add('Boot', PG.Boot);
+      game.state.add('Preloader', PG.Preloader);
+      game.state.add('Login', PG.Login);
+      game.state.add('MainMenu', PG.MainMenu);
+      game.state.add('Game', PG.Game);
+      game.state.start('Boot');
+    })();
+  </script>
+</body>
+
+</html>

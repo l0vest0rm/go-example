@@ -1,6 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
+
+func servStatic(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request")
+	http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))).ServeHTTP(w, r)
+}
 
 func batchTrain(batch int) {
 	players := []int{1, 1, 1, 1, 1}
@@ -19,6 +27,16 @@ func batchTrain(batch int) {
 	fmt.Println("final totalScores:", totalScores)
 }
 
+func humanCmdPlay() {
+	players := []int{0, 1, 1, 1, 1}
+
+	game := NewRedTen(players)
+	scores := game.Run()
+	fmt.Printf("scores:%v", scores)
+}
+
 func main() {
-	batchTrain(10000)
+	webPlay()
+	//humanPlay()
+	//batchTrain(100000)
 }

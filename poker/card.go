@@ -46,16 +46,16 @@ func PrintCards(vals []int) {
 }
 
 func ConvertVal2PrintChars(val int) string {
-	if val == 0 {
-		return red("King")
-	} else if val < 14 {
-		return fmt.Sprintf("%s%d", red("♥"), val)
-	} else if val < 27 {
-		return fmt.Sprintf("%s%d", blue("♠"), val-13)
-	} else if val < 40 {
-		return fmt.Sprintf("%s%d", green("♣"), val-26)
-	} else if val < 53 {
-		return fmt.Sprintf("%s%d", yellow("♦"), val-39)
+	if val < 13 {
+		return fmt.Sprintf("%s%d", red("♥"), val+1)
+	} else if val < 26 {
+		return fmt.Sprintf("%s%d", blue("♠"), val-12)
+	} else if val < 39 {
+		return fmt.Sprintf("%s%d", green("♣"), val-25)
+	} else if val < 52 {
+		return fmt.Sprintf("%s%d", yellow("♦"), val-38)
+	} else if val == 52 {
+		return cyan("King")
 	} else {
 		return cyan("Queen")
 	}
@@ -63,16 +63,16 @@ func ConvertVal2PrintChars(val int) string {
 
 // ConvertVal2Str 将牌数字转换成字符串
 func ConvertVal2Str(val int) string {
-	if val == 0 {
+	if val < 13 {
+		return fmt.Sprintf("A%d", val+1)
+	} else if val < 26 {
+		return fmt.Sprintf("B%d", val-12)
+	} else if val < 39 {
+		return fmt.Sprintf("C%d", val-25)
+	} else if val < 52 {
+		return fmt.Sprintf("D%d", val-38)
+	} else if val == 52 {
 		return "K0"
-	} else if val < 14 {
-		return fmt.Sprintf("A%d", val)
-	} else if val < 27 {
-		return fmt.Sprintf("B%d", val-13)
-	} else if val < 40 {
-		return fmt.Sprintf("C%d", val-26)
-	} else if val < 53 {
-		return fmt.Sprintf("D%d", val-39)
 	} else {
 		return "Q0"
 	}
@@ -96,17 +96,17 @@ func ConvertStr2Val(str string) (int, error) {
 
 	switch color {
 	case "A":
-		return num, nil
+		return num - 1, nil
 	case "B":
-		return 13 + num, nil
+		return 12 + num, nil
 	case "C":
-		return 26 + num, nil
+		return 25 + num, nil
 	case "D":
-		return 39 + num, nil
+		return 38 + num, nil
 	case "Q":
 		return 53, nil
 	case "K":
-		return 0, nil
+		return 52, nil
 	default:
 		return -1, errors.New("wrong color")
 

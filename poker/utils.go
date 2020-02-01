@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	isDebug = false //调试开关是否打开
+	isDebug = true //调试开关是否打开
 )
 
 // Printf 打印日志
