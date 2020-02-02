@@ -29,6 +29,7 @@ type RedTen struct {
 	vals           []int
 	playerNum      int
 	totalRedTenNum int
+	remainCards    CardsVals //整体剩余的卡牌(由大到小排序)
 	hands          []*Hand
 	players        []*Player
 	preHandPlayer  int  //上一个出过牌的人(没出牌不算)
@@ -51,24 +52,41 @@ type Hand struct {
 	cards    []int
 }
 
-type Robot1 struct {
+type HumanWebPlay struct {
 }
 
 type HumanCmdPlay struct {
 }
 
+type Robot1 struct {
+	redTen *RedTen
+}
+
+type Robot2 struct {
+	redTen *RedTen
+}
+
+// 出牌策略
+const (
+	GEN_PAI     = 1 //跟拍
+	KANG_ZHU    = 2 //抗住
+	JINLIANG_DA = 4 //尽量大
+	ZUI_DA      = 5 //最大
+)
+
 var (
 	//值和实际大小映射
 	valsMap = []int{
-		14, 20, 3, 4, 5, 6, 7, 8, 9, 30, 11, 12, 13,
-		14, 20, 3, 4, 5, 6, 7, 8, 9, 30, 11, 12, 13,
-		14, 20, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-		14, 20, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-		90, 80}
-	strategys = []func() IStrategy{
+		14, 15, 3, 4, 5, 6, 7, 8, 9, 20, 11, 12, 13,
+		14, 15, 3, 4, 5, 6, 7, 8, 9, 20, 11, 12, 13,
+		14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+		14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+		30, 25}
+	strategys = []func(*RedTen) IStrategy{
 		NewHumanWebPlay,
 		NewHumanCmdPlay,
 		NewRobot1,
+		NewRobot2,
 	}
 )
 
@@ -90,7 +108,7 @@ func NewRedTen(players []int) IGame {
 	}
 
 	for i := 0; i < t.playerNum; i++ {
-		t.players = append(t.players, &Player{initCards: make([]int, 0), strategy: strategys[players[i]]()})
+		t.players = append(t.players, &Player{initCards: make([]int, 0), strategy: strategys[players[i]](t)})
 	}
 
 	//发牌
@@ -121,6 +139,10 @@ func (t *RedTen) ModVals() {
 	}
 
 	t.vals = t.vals[:l]
+
+	t.remainCards = make([]int, len(t.vals))
+	copy(t.remainCards, t.vals)
+	sort.Sort(sort.Reverse(t.remainCards))
 }
 
 func (t *RedTen) Dispacther() {
@@ -336,6 +358,9 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
 		return cards
 	}
 
+	Printf("player%d hand:", playerId)
+	PrintCards(cards)
+
 	t.RecordHand(playerId, cards)
 
 	t.preHandPlayer = playerId
@@ -352,21 +377,19 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
 }
 
 func (t *RedTen) RecordHand(playerId int, cards []int) {
+	var err error
 	hand := &Hand{init: true, playerId: playerId, cards: cards}
 	t.hands = append(t.hands, hand)
 	player := t.players[playerId]
 	for _, card := range cards {
-		found := false
-		l := len(player.remainCards)
-		for i := 0; i < l; i++ {
-			if card == player.remainCards[i] {
-				found = true
-				player.remainCards = append(player.remainCards[:i], player.remainCards[i+1:]...)
-				break
-			}
+		player.remainCards, err = removeCard(player.remainCards, card)
+		if err != nil {
+			fmt.Println("not found in player cards", playerId, card)
 		}
-		if found == false {
-			fmt.Println("not found", playerId, card)
+
+		t.remainCards, err = removeCard(t.remainCards, card)
+		if err != nil {
+			fmt.Println("not found in total remain cards", playerId, card)
 		}
 	}
 }
@@ -458,7 +481,17 @@ func (t CardsVals) Swap(i, j int) {
 
 // 策略
 
-func NewHumanCmdPlay() IStrategy {
+func NewHumanWebPlay(redTen *RedTen) IStrategy {
+	player := &HumanWebPlay{}
+	return player
+}
+
+// 人出牌
+func (t *HumanWebPlay) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
+	return candidates
+}
+
+func NewHumanCmdPlay(redTen *RedTen) IStrategy {
 	player := &HumanCmdPlay{}
 	return player
 }
@@ -482,20 +515,150 @@ func (t *HumanCmdPlay) Hand(playerId int, init bool, hands []*Hand, remainCards 
 	return vals
 }
 
-func NewRobot1() IStrategy {
-	player := &Robot1{}
+func NewRobot1(redTen *RedTen) IStrategy {
+	player := &Robot1{redTen: redTen}
 	return player
 }
 
 // 机器人出牌
 func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
 	var cards []int
+	typs := arrangeRemainCards(remainCards)
+	PrintArrangeRemainCards(typs)
 	if init {
 		cards = findMultiSame(remainCards, remainCards[0])
-	} else {
-		preHand := hands[len(hands)-1]
-		cards = findJustBiggerN(remainCards, preHand.cards[0], len(preHand.cards))
+		return cards
+	}
+
+	preHand := hands[len(hands)-1]
+	/*if isCollaborator(t.redTen, playerId, preHand.playerId) && valsMap[preHand.cards[0]] > 9 {
+		return nil
+	}*/
+
+	//如果是上家出牌，比较大时不要了
+	if isPrePlayer(playerId, preHand.playerId, t.redTen.playerNum) && valsMap[preHand.cards[0]] > 12 {
+		return nil
+	}
+
+	//优先不拆
+	cards = findJustBiggerN2(typs[len(preHand.cards)-1], preHand.cards[0])
+	if cards == nil {
+		cards = unpackMore(typs, preHand.cards[0], len((preHand.cards)))
 	}
 
 	return cards
+}
+
+func NewRobot2(redTen *RedTen) IStrategy {
+	player := &Robot2{redTen: redTen}
+	return player
+}
+
+// 机器人出牌
+func (t *Robot2) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
+	var cards []int
+	typs := arrangeRemainCards(remainCards)
+	PrintArrangeRemainCards(typs)
+	if init {
+		cards = findMultiSame(remainCards, remainCards[0])
+		return cards
+	}
+
+	preHand := hands[len(hands)-1]
+	//如果已确认是同伙，比较大时不要了
+	/*if isCollaborator(t.redTen, playerId, preHand.playerId) && valsMap[preHand.cards[0]] > 9 {
+		return nil
+	}*/
+
+	//如果是上家出牌,上家大于3张时，比较大时不要了
+	if isPrePlayer(playerId, preHand.playerId, t.redTen.playerNum) && valsMap[preHand.cards[0]] > 12 {
+		return nil
+	}
+
+	//优先不拆
+	cards = findJustBiggerN2(typs[len(preHand.cards)-1], preHand.cards[0])
+	if cards == nil {
+		cards = unpackMore(typs, preHand.cards[0], len((preHand.cards)))
+	}
+
+	return cards
+}
+
+//整理手牌
+func arrangeRemainCards(remainCards []int) [][][]int {
+	typs := make([][][]int, 4, 4)
+	n := 0
+	typs[0] = make([][]int, 0, 0)
+	typs[0] = append(typs[0], []int{remainCards[0]})
+	for i := 1; i < len(remainCards); i++ {
+		if valsMap[remainCards[i-1]] != valsMap[remainCards[i]] {
+			n = 0
+			typs[n] = append(typs[n], []int{remainCards[i]})
+			continue
+		}
+
+		//值一样的牌，升级
+		l := len(typs[n])
+		cards := typs[n][l-1]
+		typs[n] = typs[n][:l-1]
+		cards = append(cards, remainCards[i])
+		n += 1
+		if typs[n] == nil {
+			typs[n] = make([][]int, 0, 0)
+		}
+		typs[n] = append(typs[n], cards)
+
+	}
+
+	return typs
+}
+
+func PrintArrangeRemainCards(typs [][][]int) {
+	for i := 0; i < len(typs); i++ {
+		Printf("\n牌型%d:", i)
+		for j := 0; j < len(typs[i]); j++ {
+			PrintCards(typs[i][j])
+			Printf(";")
+		}
+	}
+}
+
+func findJustBiggerN2(cardss [][]int, card int) (vals []int) {
+	//找一个刚好大过上家的
+	for i := 0; i < len(cardss); i++ {
+		if valsMap[card] >= valsMap[cardss[i][0]] {
+			continue
+		}
+		vals = make([]int, len(cardss[i]))
+		copy(vals, cardss[i])
+		break
+	}
+
+	Printf("\nfindJustBiggerN2:")
+	PrintCards(vals)
+
+	return vals
+}
+
+//拆牌
+func unpackMore(typs [][][]int, card int, l int) []int {
+	for i := l; i < 4; i++ {
+		cards := findJustBiggerN2(typs[i], card)
+		if cards != nil {
+			return cards[:l]
+		}
+	}
+
+	return nil
+}
+
+func isPrePlayer(playerId int, prePlayerId int, playerNum int) bool {
+	if (prePlayerId+1)%playerNum == playerId {
+		return true
+	}
+	return false
+}
+
+func isCollaborator(redTenCnt int, hands []*Hand) bool {
+	return redTen.players[playerId].redTenCnt == redTen.players[preHandPlayerId].redTenCnt
 }

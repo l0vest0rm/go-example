@@ -112,3 +112,21 @@ func ConvertStr2Val(str string) (int, error) {
 
 	}
 }
+
+func removeCard(cards []int, card int) ([]int, error) {
+	l := len(cards)
+	found := false
+	for i := 0; i < l; i++ {
+		if card == cards[i] {
+			found = true
+			cards = append(cards[:i], cards[i+1:]...)
+			break
+		}
+	}
+
+	if found {
+		return cards, nil
+	}
+
+	return cards, fmt.Errorf("card not found:%d", card)
+}

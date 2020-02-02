@@ -74,14 +74,12 @@ type Games struct {
 	gamesMap    map[int]IGame
 }
 
-type HumanWebPlay struct {
-}
-
 var (
 	games Games
 )
 
 func webPlay() {
+	isDebug = true
 	games = Games{
 		nextTableId: 1,
 		gamesMap:    make(map[int]IGame),
@@ -294,14 +292,4 @@ func getGame(tableId int) IGame {
 	}
 
 	return game
-}
-
-func NewHumanWebPlay() IStrategy {
-	player := &HumanWebPlay{}
-	return player
-}
-
-// 人出牌
-func (t *HumanWebPlay) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
-	return candidates
 }

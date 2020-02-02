@@ -10,7 +10,7 @@ func servStatic(w http.ResponseWriter, r *http.Request) {
 }
 
 func batchTrain(batch int) {
-	players := []int{1, 1, 1, 1, 1}
+	players := []int{3, 2, 2, 2, 2}
 	totalScores := make([]int, len(players), len(players))
 
 	for i := 0; i < batch; i++ {
@@ -20,14 +20,14 @@ func batchTrain(batch int) {
 			totalScores[j] += scores[j]
 		}
 		if i%1000 == 0 {
-			fmt.Printf("batch%d,totalScores:%v", i, totalScores)
+			fmt.Printf("\nbatch%d,totalScores:%v", i, totalScores)
 		}
 	}
-	fmt.Println("final totalScores:", totalScores)
+	fmt.Println("\nfinal totalScores:", totalScores)
 }
 
 func humanCmdPlay() {
-	players := []int{0, 1, 1, 1, 1}
+	players := []int{1, 2, 2, 2, 2}
 
 	game := NewRedTen(players)
 	scores := game.CmdRun()
@@ -35,7 +35,7 @@ func humanCmdPlay() {
 }
 
 func main() {
-	webPlay()
+	//webPlay()
 	//humanPlay()
-	//batchTrain(100000)
+	batchTrain(10000)
 }
