@@ -99,7 +99,7 @@ func webSocketRcv(ws *websocket.Conn) {
 		var msg Message
 
 		if err = websocket.Message.Receive(ws, &req); err != nil {
-			panic(err)
+			fmt.Println(err)
 			continue
 		}
 
