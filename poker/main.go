@@ -6,7 +6,6 @@ import (
 )
 
 func servStatic(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("request")
 	http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))).ServeHTTP(w, r)
 }
 
@@ -16,7 +15,7 @@ func batchTrain(batch int) {
 
 	for i := 0; i < batch; i++ {
 		game := NewRedTen(players)
-		scores := game.Run()
+		scores := game.CmdRun()
 		for j := 0; j < len(scores); j++ {
 			totalScores[j] += scores[j]
 		}
@@ -31,7 +30,7 @@ func humanCmdPlay() {
 	players := []int{0, 1, 1, 1, 1}
 
 	game := NewRedTen(players)
-	scores := game.Run()
+	scores := game.CmdRun()
 	fmt.Printf("scores:%v", scores)
 }
 

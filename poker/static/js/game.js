@@ -129,7 +129,7 @@ PG.Game.prototype = {
         this.handleShotPoker(msg);
         break;
       case PG.Protocol.RSP_GAME_OVER:
-        var winner = packet[1];
+        /*var winner = packet[1];
         var coin = packet[2];
 
         var loserASeat = this.uidToSeat(packet[3][0]);
@@ -142,10 +142,10 @@ PG.Game.prototype = {
         //                 this.players[loserBSeat].removeAllPoker();
         //               this.players[loserASeat].pokerInHand = [];
 
-        this.whoseTurn = this.uidToSeat(winner);
+        this.whoseTurn = this.uidToSeat(winner);*/
 
         function gameOver() {
-          alert(this.players[this.whoseTurn].isLandlord ? "地主赢" : "农民赢");
+          alert(msg.data);
           PG.Socket.send({
             code: PG.Protocol.REQ_RESTART,
             tableId: this.tableId
@@ -336,11 +336,10 @@ PG.Game.prototype = {
       this.lastShotPlayer = turnPlayer;
       turnPlayer.arrangePoker();
     }
-    if (turnPlayer.pokerInHand.length > 0) {
-      this.whoseTurn = (this.whoseTurn + 1) % 5;
-      if (this.whoseTurn == 0) {
-        this.game.time.events.add(1000, this.startPlay, this);
-      }
+
+    this.whoseTurn = (this.whoseTurn + 1) % this.players.length;
+    if (this.whoseTurn == 0 && this.players[this.whoseTurn].pokerInHand.length > 0) {
+      this.game.time.events.add(1000, this.startPlay, this);
     }
   },
 

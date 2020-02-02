@@ -74,6 +74,9 @@ type Games struct {
 	gamesMap    map[int]IGame
 }
 
+type HumanWebPlay struct {
+}
+
 var (
 	games Games
 )
@@ -122,6 +125,17 @@ func webSocketRcv(ws *websocket.Conn) {
 func onReqJoinRoom(ws *websocket.Conn, msg *Message) {
 	msg.Code = RSP_JOIN_ROOM
 	webSocketSendMsg(ws, msg)
+}
+
+func gameOver(ws *websocket.Conn, game IGame, tableId int, uid int) {
+	scores := game.CalcScores()
+	rsp := Message{
+		Code:    RSP_GAME_OVER,
+		TableId: tableId,
+		Uid:     uid,
+		Data:    scores,
+	}
+	webSocketSendMsg(ws, rsp)
 }
 
 func onReqJoinTable(ws *websocket.Conn, msg *Message) {
@@ -186,7 +200,7 @@ func onReqShotPoker(ws *websocket.Conn, msg *Message) {
 	}
 
 	if len(cards) > 0 {
-		game.RecordHand(0, cards)
+		game.PlayerHand(0, cards)
 	}
 
 	rsp := Message{
@@ -213,6 +227,11 @@ func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
 	for {
 		time.Sleep(time.Second * 2)
 		playerId := game.NextPlayer(prePlayerId)
+		if playerId == -1 {
+			Println("\ngame over")
+			gameOver(ws, game, tableId, uid)
+			return
+		}
 		prePlayerId = playerId
 		if playerId == 0 {
 			rsp = Message{
@@ -225,7 +244,7 @@ func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
 			break
 		}
 
-		cards := game.PlayerHand(playerId)
+		cards := game.PlayerHand(playerId, nil)
 		if cards == nil {
 			cards = []int{}
 		}
@@ -241,7 +260,7 @@ func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
 }
 
 func prepreGame() int {
-	players := []int{0, 1, 1, 1, 1}
+	players := []int{0, 2, 2, 2, 2}
 	game := NewRedTen(players)
 
 	games.mu.Lock()
@@ -275,4 +294,14 @@ func getGame(tableId int) IGame {
 	}
 
 	return game
+}
+
+func NewHumanWebPlay() IStrategy {
+	player := &HumanWebPlay{}
+	return player
+}
+
+// 人出牌
+func (t *HumanWebPlay) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
+	return candidates
 }

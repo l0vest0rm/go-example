@@ -11,18 +11,18 @@ type CardsVals []int
 // IGame 游戏局接口
 type IGame interface {
 	Dispacther()
-	Run() []int
+	CmdRun() []int
+	CalcScores() []int
 	Vals() []int
 	RemainCards(playerId int) []int
 	NextPlayer(playerId int) int
-	PlayerHand(playerId int) []int
-	RecordHand(playerId int, cards []int)
+	PlayerHand(playerId int, candidates []int) []int
 	PrintPlayersRemainCards()
 }
 
 // IStrategy 策略接口
 type IStrategy interface {
-	Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int
+	Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int
 }
 
 type RedTen struct {
@@ -31,7 +31,10 @@ type RedTen struct {
 	totalRedTenNum int
 	hands          []*Hand
 	players        []*Player
-	prePlayer      int
+	preHandPlayer  int  //上一个出过牌的人(没出牌不算)
+	checkDuty      bool //是否检查蹲
+	dutyPlayer     int  //要求蹲的人
+	rank           int  //第一个走的
 }
 
 type Player struct {
@@ -51,7 +54,7 @@ type Hand struct {
 type Robot1 struct {
 }
 
-type Human struct {
+type HumanCmdPlay struct {
 }
 
 var (
@@ -63,7 +66,8 @@ var (
 		14, 20, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 		90, 80}
 	strategys = []func() IStrategy{
-		NewHuman,
+		NewHumanWebPlay,
+		NewHumanCmdPlay,
 		NewRobot1,
 	}
 )
@@ -71,10 +75,13 @@ var (
 func NewRedTen(players []int) IGame {
 	vals := NewCards()
 	t := &RedTen{playerNum: len(players),
-		vals:      vals,
-		hands:     make([]*Hand, 0),
-		players:   make([]*Player, 0),
-		prePlayer: -1,
+		vals:          vals,
+		hands:         make([]*Hand, 0),
+		players:       make([]*Player, 0),
+		preHandPlayer: -1,
+		checkDuty:     false,
+		dutyPlayer:    -1,
+		rank:          1,
 	}
 	t.ModVals()
 	Shuffle(t.vals)
@@ -260,11 +267,8 @@ func (t *RedTen) findRank(rank int) int {
 }
 
 // Run 开始运行，假设player0是真人，其它是机器人
-func (t *RedTen) Run() []int {
+func (t *RedTen) CmdRun() []int {
 	i := -1
-	checkDuty := false
-	dutyPlayer := -1 //上一个走的人
-	rank := 1
 	for {
 		i = t.NextPlayer(i)
 		if i == -1 {
@@ -273,35 +277,11 @@ func (t *RedTen) Run() []int {
 			return t.CalcScores()
 		}
 
-		if dutyPlayer == i {
-			Printf("\nplayer%d 蹲我", i)
-			//init = true
-			dutyPlayer = -1
-		}
-
-		if checkDuty {
-			checkDuty = false
-			dutyPlayer = i
-		}
-
 		if i == 0 {
 			t.PrintPlayersRemainCards()
 		}
 
-		cards := t.PlayerHand(i)
-		if cards != nil {
-			Printf("\nplayer%d hand:%v", i, ConvertVals2PrintChars(cards))
-			dutyPlayer = -1
-			//看是否出完了
-			if len(t.players[i].remainCards) == 0 {
-				Printf("\nplayer%d 走了", i)
-				t.players[i].rank = rank
-				rank += 1
-				checkDuty = true
-			} else {
-				checkDuty = false
-			}
-		}
+		t.PlayerHand(i, nil)
 	}
 }
 
@@ -334,17 +314,39 @@ func (t *RedTen) NextPlayer(playerId int) int {
 }
 
 // 出一手牌,如果返回空表示不出
-func (t *RedTen) PlayerHand(playerId int) []int {
+func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
 	init := false
-	if t.prePlayer == -1 || t.prePlayer == playerId {
+	if t.preHandPlayer == -1 || t.preHandPlayer == playerId {
 		init = true
 	}
-	cards := t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards)
+
+	if t.dutyPlayer == playerId {
+		Printf("\nplayer%d 蹲我", playerId)
+		init = true
+		t.dutyPlayer = -1
+	}
+
+	if t.checkDuty {
+		t.checkDuty = false
+		t.dutyPlayer = playerId
+	}
+
+	cards := t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards, candidates)
 	if cards == nil {
 		return cards
 	}
 
 	t.RecordHand(playerId, cards)
+
+	t.preHandPlayer = playerId
+	t.dutyPlayer = -1
+	//看是否出完了
+	if len(t.players[playerId].remainCards) == 0 {
+		Printf("\nplayer%d 走了", playerId)
+		t.players[playerId].rank = t.rank
+		t.rank += 1
+		t.checkDuty = true
+	}
 
 	return cards
 }
@@ -367,8 +369,6 @@ func (t *RedTen) RecordHand(playerId int, cards []int) {
 			fmt.Println("not found", playerId, card)
 		}
 	}
-
-	t.prePlayer = playerId
 }
 
 func convertStr2Val(input string) ([]int, error) {
@@ -458,13 +458,13 @@ func (t CardsVals) Swap(i, j int) {
 
 // 策略
 
-func NewHuman() IStrategy {
-	player := &Human{}
+func NewHumanCmdPlay() IStrategy {
+	player := &HumanCmdPlay{}
 	return player
 }
 
 // 人出牌
-func (t *Human) Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int {
+func (t *HumanCmdPlay) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
 	var input string
 	fmt.Println("\n请出牌:")
 	fmt.Scanln(&input)
@@ -476,7 +476,7 @@ func (t *Human) Hand(playerId int, init bool, hands []*Hand, remainCards []int) 
 	vals, err := convertStr2Val(input)
 	if err != nil {
 		fmt.Println("出牌有误,", err)
-		return t.Hand(playerId, init, hands, remainCards)
+		return t.Hand(playerId, init, hands, remainCards, candidates)
 	}
 
 	return vals
@@ -488,7 +488,7 @@ func NewRobot1() IStrategy {
 }
 
 // 机器人出牌
-func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int) []int {
+func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
 	var cards []int
 	if init {
 		cards = findMultiSame(remainCards, remainCards[0])

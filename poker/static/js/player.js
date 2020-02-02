@@ -11,7 +11,7 @@ PG.createPlay = function (game, seat) {
       break;
     case 5:
       xy = [
-        PG.PW / 2, game.world.height - PG.PH - 40,
+        PG.PW / 2 + 120, game.world.height - PG.PH - 10,
         game.world.width - PG.PW / 2, game.world.height - PG.PH - 40,
         game.world.width - PG.PW / 2, 94,
         PG.PW / 2, 94,
