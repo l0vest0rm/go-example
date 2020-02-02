@@ -74,11 +74,15 @@ const (
 	ZUI_DA      = 5 //最大
 )
 
+const (
+	RED_TEN_VALUE = 20
+)
+
 var (
 	//值和实际大小映射
 	valsMap = []int{
-		14, 15, 3, 4, 5, 6, 7, 8, 9, 20, 11, 12, 13,
-		14, 15, 3, 4, 5, 6, 7, 8, 9, 20, 11, 12, 13,
+		14, 15, 3, 4, 5, 6, 7, 8, 9, RED_TEN_VALUE, 11, 12, 13,
+		14, 15, 3, 4, 5, 6, 7, 8, 9, RED_TEN_VALUE, 11, 12, 13,
 		14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 		14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 		30, 25}
@@ -660,5 +664,42 @@ func isPrePlayer(playerId int, prePlayerId int, playerNum int) bool {
 }
 
 func isCollaborator(redTenCnt int, hands []*Hand) bool {
-	return redTen.players[playerId].redTenCnt == redTen.players[preHandPlayerId].redTenCnt
+	//return redTen.players[playerId].redTenCnt == redTen.players[preHandPlayerId].redTenCnt
+	return false
+}
+
+//验证牌型有效（都一样）
+func validateSame(cards []int) bool {
+	if len(cards) == 1 {
+		return true
+	}
+
+	for i := 1; i < len(cards); i++ {
+		if valsMap[cards[i]] != valsMap[cards[i-1]] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateBigger(preCards []int, cards []int) bool {
+	if len(preCards) > len(cards) {
+		return false
+	}
+
+	if !validateSame(cards) {
+		return false
+	}
+
+	if len(preCards) == len(cards) {
+		return valsMap[cards[0]] > valsMap[preCards[0]]
+	}
+
+	//判断是否红十
+	if valsMap[cards[0]] == RED_TEN_VALUE {
+		return true
+	}
+
+	return false
 }
