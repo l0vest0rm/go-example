@@ -16,7 +16,7 @@ type IGame interface {
 	Vals() []int
 	RemainCards(playerId int) []int
 	NextPlayer(playerId int) int
-	PlayerHand(playerId int, candidates []int) []int
+	PlayerHand(playerId int, candidates []int) ([]int, bool)
 	PrintPlayersRemainCards()
 }
 
@@ -340,7 +340,11 @@ func (t *RedTen) NextPlayer(playerId int) int {
 }
 
 // 出一手牌,如果返回空表示不出
-func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
+func (t *RedTen) PlayerHand(playerId int, candidates []int) (cards []int, valid bool) {
+	//临时数据保存
+	dutyPlayer := t.dutyPlayer
+	checkDuty := t.checkDuty
+
 	init := false
 	if t.preHandPlayer == -1 || t.preHandPlayer == playerId {
 		init = true
@@ -357,9 +361,24 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
 		t.dutyPlayer = playerId
 	}
 
-	cards := t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards, candidates)
+	//检查候选是否合法
+	if candidates != nil && len(candidates) > 0 {
+		if init {
+			valid = validateSame(candidates)
+		} else {
+			valid = validateBigger(t.hands[len(t.hands)-1].cards, candidates)
+		}
+		if !valid {
+			//恢复现场
+			t.dutyPlayer = dutyPlayer
+			t.checkDuty = checkDuty
+			return nil, false
+		}
+	}
+
+	cards = t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards, candidates)
 	if cards == nil {
-		return cards
+		return cards, true
 	}
 
 	Printf("player%d hand:", playerId)
@@ -377,7 +396,7 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) []int {
 		t.checkDuty = true
 	}
 
-	return cards
+	return cards, true
 }
 
 func (t *RedTen) RecordHand(playerId int, cards []int) {

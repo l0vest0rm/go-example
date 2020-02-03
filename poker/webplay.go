@@ -32,7 +32,8 @@ const (
 	REQ_NEW_TABLE = 21
 	RSP_NEW_TABLE = 22
 
-	START_PLAY = 23
+	YOUR_TURN      = 23 //轮到你了
+	INVALID_POCKER = 24 //牌型不合法
 
 	REQ_DEAL_POKER = 31
 	RSP_DEAL_POKER = 32
@@ -193,22 +194,35 @@ func onReqShotPoker(ws *websocket.Conn, msg *Message) {
 
 	cardsFls := msg.Data.([]interface{})
 	cards := make([]int, 0)
+	valid := true
 	for _, card := range cardsFls {
 		cards = append(cards, int(card.(float64)))
 	}
 
 	if len(cards) > 0 {
-		game.PlayerHand(0, cards)
+		_, valid = game.PlayerHand(0, cards)
 	}
 
-	rsp := Message{
-		Code:    RSP_SHOT_POKER,
-		TableId: msg.TableId,
-		Uid:     msg.Uid,
-		Data:    cards,
+	var rsp Message
+	if valid {
+		rsp = Message{
+			Code:    RSP_SHOT_POKER,
+			TableId: msg.TableId,
+			Uid:     msg.Uid,
+			Data:    cards,
+		}
+	} else {
+		rsp = Message{
+			Code:    INVALID_POCKER,
+			TableId: msg.TableId,
+			Uid:     msg.Uid,
+		}
 	}
 
 	webSocketSendMsg(ws, rsp)
+	if !valid {
+		return
+	}
 
 	nextRound(ws, msg.TableId, msg.Uid, 0)
 
@@ -233,7 +247,7 @@ func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
 		prePlayerId = playerId
 		if playerId == 0 {
 			rsp = Message{
-				Code:    START_PLAY,
+				Code:    YOUR_TURN,
 				TableId: tableId,
 				Uid:     uid,
 			}
@@ -242,7 +256,7 @@ func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
 			break
 		}
 
-		cards := game.PlayerHand(playerId, nil)
+		cards, _ := game.PlayerHand(playerId, nil)
 		if cards == nil {
 			cards = []int{}
 		}

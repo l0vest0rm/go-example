@@ -178,10 +178,16 @@ PG.Player.prototype.onShot = function (btn) {
     return;
   }*/
   this.game.finishPlay(this.hintPoker);
-  this.hintPoker = [];
+  /*this.hintPoker = [];
   btn.parent.forEach(function (child) {
     child.kill();
-  });
+  });*/
+};
+
+PG.Player.prototype.invalidPoker = function () {
+  var code = "出牌不合法";
+  console.log(code)
+  this.say(code);
 };
 
 
@@ -336,4 +342,13 @@ PG.Player.prototype.pokerUnSelected = function (pokers) {
     var p = this.findAPoker(pokers[i]);
     p.y = this.game.world.height - PG.PH / 2;
   }
+};
+
+PG.Player.prototype.hindButton = function () {
+  var group = this.shotLayer;
+  this.pokerUnSelected(this.hintPoker);
+  this.hintPoker = [];
+  group.forEach(function (child) {
+    child.kill();
+  });
 };

@@ -90,8 +90,11 @@ PG.Game.prototype = {
           this.players[i].updateInfo(playerIds[i].uid, playerIds[i].name);
         }
         break;
-      case PG.Protocol.START_PLAY:
+      case PG.Protocol.YOUR_TURN:
         this.startPlay();
+        break;
+      case PG.Protocol.INVALID_POCKER:
+        this.invalidPoker();
         break;
       case PG.Protocol.RSP_DEAL_POKER:
         var playerId = msg.uid;
@@ -305,6 +308,11 @@ PG.Game.prototype = {
     this.whoseTurn = this.uidToSeat(msg.uid);
     var turnPlayer = this.players[this.whoseTurn];
     var pokers = msg.data;
+
+    if (this.whoseTurn == 0) {
+      this.players[0].hindButton();
+    }
+
     if (pokers.length == 0) {
       this.players[this.whoseTurn].say("不出");
     } else {
@@ -338,9 +346,9 @@ PG.Game.prototype = {
     }
 
     this.whoseTurn = (this.whoseTurn + 1) % this.players.length;
-    if (this.whoseTurn == 0 && this.players[this.whoseTurn].pokerInHand.length > 0) {
+    /*if (this.whoseTurn == 0 && this.players[this.whoseTurn].pokerInHand.length > 0) {
       this.game.time.events.add(1000, this.startPlay, this);
-    }
+    }*/
   },
 
   startCallScore: function (minscore) {
@@ -387,6 +395,10 @@ PG.Game.prototype = {
     } else {
       this.players[0].playPoker(this.tablePoker);
     }
+  },
+
+  invalidPoker: function () {
+    this.players[0].invalidPoker();
   },
 
   finishPlay: function (pokers) {
