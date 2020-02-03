@@ -45,10 +45,18 @@ PG.Game.prototype = {
 
   onopen: function () {
     console.log('socket onopen');
-    PG.Socket.send({
-      code: PG.Protocol.REQ_CREATE_AI_TABLE,
-      uid: this.uid,
-    });
+    if (this.roomId == 1) {
+      PG.Socket.send({
+        code: PG.Protocol.REQ_CREATE_AI_TABLE,
+        uid: this.uid,
+      });
+    } else if (this.roomId == 2) {
+      PG.Socket.send({
+        code: PG.Protocol.REQ_TABLE_LIST,
+        uid: this.uid,
+      });
+    }
+
   },
 
   onerror: function () {

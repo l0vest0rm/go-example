@@ -374,7 +374,7 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) (cards []int, valid 
 	}
 
 	cards = t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards, candidates)
-	if cards == nil {
+	if cards == nil || len(cards) == 0 {
 		return nil, true
 	}
 

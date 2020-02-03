@@ -73,6 +73,11 @@ type PlayerInfo struct {
 	Name string `json:"name"`
 }
 
+type TableInfo struct {
+	TableId int `json:"tableId"`
+	Players int `json:"players"`
+}
+
 type UserInfo struct {
 	uid      int
 	tableId  int
@@ -125,6 +130,9 @@ func webSocketRcv(ws *websocket.Conn) {
 		case REQ_CREATE_AI_TABLE:
 			user.uid = msg.Uid
 			onReqCreateAiTable(ws, &user)
+		case REQ_TABLE_LIST:
+			user.uid = msg.Uid
+			onReqTableList(ws, &user)
 		case REQ_DEAL_POKER:
 			onReqDealPoker(ws, &user)
 		case REQ_SHOT_POKER:
@@ -163,6 +171,22 @@ func onReqCreateAiTable(ws *websocket.Conn, user *UserInfo) {
 		Uid:     user.uid,
 		TableId: user.tableId,
 		Data:    data,
+	}
+
+	webSocketSendMsg(ws, rsp)
+}
+
+func onReqTableList(ws *websocket.Conn, user *UserInfo) {
+
+	data := []TableInfo{
+		{TableId: 1, Players: 0},
+		{TableId: 2, Players: 0},
+	}
+
+	rsp := Message{
+		Code: RSP_TABLE_LIST,
+		Uid:  user.uid,
+		Data: data,
 	}
 
 	webSocketSendMsg(ws, rsp)
@@ -223,8 +247,9 @@ func onReqShotPoker(ws *websocket.Conn, user *UserInfo, msg *Message) {
 		cards = append(cards, int(card.(float64)))
 	}
 
-	if len(cards) > 0 {
-		_, valid = game.PlayerHand(0, cards)
+	cards, valid = game.PlayerHand(0, cards)
+	if cards == nil {
+		cards = []int{}
 	}
 
 	var rsp Message
