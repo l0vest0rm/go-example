@@ -68,10 +68,9 @@ type Robot2 struct {
 
 // 出牌策略
 const (
-	GEN_PAI     = 1 //跟拍
-	KANG_ZHU    = 2 //抗住
-	JINLIANG_DA = 4 //尽量大
-	ZUI_DA      = 5 //最大
+	NO       = 0
+	YES      = 1
+	NOT_SURE = 2 //不确定
 )
 
 const (
@@ -161,7 +160,7 @@ func (t *RedTen) Dispacther() {
 		sort.Sort(t.players[i].initCards)
 		t.players[i].remainCards = make([]int, len(t.players[i].initCards))
 		copy(t.players[i].remainCards, t.players[i].initCards)
-		t.players[i].redTenCnt = redTenCnt(t.players[i].initCards)
+		t.players[i].redTenCnt = clcRedTenCnt(t.players[i].initCards)
 		//fmt.Println(i, t.players[i])
 	}
 }
@@ -174,7 +173,7 @@ func isRedTen(card int) bool {
 	}
 }
 
-func redTenCnt(cards []int) int {
+func clcRedTenCnt(cards []int) int {
 	redTenCnt := 0
 	for _, card := range cards {
 		if isRedTen(card) {
@@ -554,9 +553,11 @@ func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int,
 	}
 
 	preHand := hands[len(hands)-1]
-	/*if isCollaborator(t.redTen, playerId, preHand.playerId) && valsMap[preHand.cards[0]] > 9 {
+	//如果已确认是同伙，比较大时不要了
+	ret := isCollaborator(t.redTen.hands, t.redTen.totalRedTenNum, t.redTen.players[playerId].redTenCnt, playerId)
+	if ret == YES && valsMap[preHand.cards[0]] > 9 {
 		return nil
-	}*/
+	}
 
 	//如果是上家出牌，比较大时不要了
 	if isPrePlayer(playerId, preHand.playerId, t.redTen.playerNum) && valsMap[preHand.cards[0]] > 12 {
@@ -589,9 +590,10 @@ func (t *Robot2) Hand(playerId int, init bool, hands []*Hand, remainCards []int,
 
 	preHand := hands[len(hands)-1]
 	//如果已确认是同伙，比较大时不要了
-	/*if isCollaborator(t.redTen, playerId, preHand.playerId) && valsMap[preHand.cards[0]] > 9 {
+	ret := isCollaborator(t.redTen.hands, t.redTen.totalRedTenNum, t.redTen.players[playerId].redTenCnt, playerId)
+	if ret == YES && valsMap[preHand.cards[0]] > 9 {
 		return nil
-	}*/
+	}
 
 	//如果是上家出牌,上家大于3张时，比较大时不要了
 	if isPrePlayer(playerId, preHand.playerId, t.redTen.playerNum) && valsMap[preHand.cards[0]] > 12 {
@@ -682,9 +684,75 @@ func isPrePlayer(playerId int, prePlayerId int, playerNum int) bool {
 	return false
 }
 
-func isCollaborator(redTenCnt int, hands []*Hand) bool {
-	//return redTen.players[playerId].redTenCnt == redTen.players[preHandPlayerId].redTenCnt
-	return false
+func getRedTenPlayerIds(hands []*Hand, totalRedTenNum int, myRedTenCnt int, myPlayerId int) ([]int, bool) {
+	playerIds := make([]int, 0)
+	redTenCnt := 0
+	n := 0
+
+	if myRedTenCnt > 0 {
+		redTenCnt += myRedTenCnt
+		playerIds = append(playerIds, myPlayerId)
+	}
+
+	l := len(hands)
+	for i := 0; i < l; i++ {
+		if hands[i].playerId == myPlayerId {
+			continue
+		}
+
+		n = clcRedTenCnt(hands[i].cards)
+		if n > 0 {
+			redTenCnt += n
+			found := false
+			for j := 0; j < len(playerIds); j++ {
+				if playerIds[j] == hands[i].playerId {
+					found = true
+				}
+			}
+
+			if !found {
+				playerIds = append(playerIds, hands[i].playerId)
+			}
+		}
+	}
+
+	if redTenCnt == totalRedTenNum {
+		return playerIds, true
+	} else {
+		return playerIds, false
+	}
+}
+
+func isCollaborator(hands []*Hand, totalRedTenNum int, myRedTenCnt int, myPlayerId int) int {
+	redTenPlayerIds, isAll := getRedTenPlayerIds(hands, totalRedTenNum, myRedTenCnt, myPlayerId)
+	preHnaderHasRedTen := false
+	l := len(hands)
+	for _, playerId := range redTenPlayerIds {
+		if playerId == hands[l-1].playerId {
+			preHnaderHasRedTen = true
+			break
+		}
+	}
+
+	if preHnaderHasRedTen {
+		if myRedTenCnt > 0 {
+			return YES
+		} else {
+			return NO
+		}
+	}
+
+	//红十都出完了，上家确定没有红十
+	if isAll {
+		if myRedTenCnt > 0 {
+			return NO
+		} else {
+			return YES
+		}
+	}
+
+	//不确定性上家是否有红十
+	return NOT_SURE
 }
 
 //验证牌型有效（都一样）

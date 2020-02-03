@@ -18,7 +18,7 @@ func runRounds(players []int, rounds int) []int {
 		for j := 0; j < len(scores); j++ {
 			totalScores[j] += scores[j]
 		}
-		if i%1000 == 0 {
+		if i%2000 == 0 {
 			fmt.Printf("\nround%d,totalScores:%v", i, totalScores)
 		}
 	}
@@ -30,6 +30,7 @@ func batchTrain(batch int, rounds int) {
 	finalScores := make([][]int, batch, batch)
 
 	for i := 0; i < batch; i++ {
+		fmt.Printf("\nbatch %d begin", i)
 		finalScores[i] = runRounds(players, rounds)
 	}
 
@@ -49,7 +50,7 @@ func humanCmdPlay() {
 }
 
 func main() {
-	webPlay()
+	//webPlay()
 	//humanPlay()
-	//batchTrain(10, 10000)
+	batchTrain(10, 10000)
 }
