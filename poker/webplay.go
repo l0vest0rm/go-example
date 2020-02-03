@@ -14,6 +14,9 @@ const (
 	REQ_CHEAT = 1
 	RSP_CHEAT = 2
 
+	REQ_CREATE_AI_TABLE = 3 //创建一个机器人局
+	RSP_CREATE_AI_TABLE = 4
+
 	REQ_LOGIN = 11
 	RSP_LOGIN = 12
 
@@ -32,8 +35,9 @@ const (
 	REQ_NEW_TABLE = 21
 	RSP_NEW_TABLE = 22
 
-	YOUR_TURN      = 23 //轮到你了
-	INVALID_POCKER = 24 //牌型不合法
+	YOUR_TURN      = 23 //轮到你出牌
+	YOU_SHOT       = 24 //你可以压
+	INVALID_POCKER = 25 //牌型不合法
 
 	REQ_DEAL_POKER = 31
 	RSP_DEAL_POKER = 32
@@ -59,14 +63,20 @@ const (
 
 type Message struct {
 	Code    int         `json:"code"`
-	TableId int         `json:"tableId"`
 	Uid     int         `json:"uid"`
-	Data    interface{} `json:"data"`
+	TableId int         `json:"tableId,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type PlayerInfo struct {
 	Uid  int    `json:"uid"`
 	Name string `json:"name"`
+}
+
+type UserInfo struct {
+	uid      int
+	tableId  int
+	playerId int
 }
 
 type Games struct {
@@ -82,7 +92,7 @@ var (
 func webPlay() {
 	isDebug = true
 	games = Games{
-		nextTableId: 1,
+		nextTableId: 101,
 		gamesMap:    make(map[int]IGame),
 	}
 
@@ -93,13 +103,17 @@ func webPlay() {
 
 func webSocketRcv(ws *websocket.Conn) {
 	var err error
+	user := UserInfo{}
+	user.uid = 1710
+
 	for {
 		var req []byte
 		var msg Message
 
 		if err = websocket.Message.Receive(ws, &req); err != nil {
 			fmt.Println(err)
-			continue
+			ws.Close()
+			return
 		}
 
 		err := json.Unmarshal(req, &msg)
@@ -108,12 +122,13 @@ func webSocketRcv(ws *websocket.Conn) {
 		}
 
 		switch msg.Code {
-		case REQ_JOIN_ROOM:
-			onReqJoinRoom(ws, &msg)
-		case REQ_JOIN_TABLE:
-			onReqJoinTable(ws, &msg)
+		case REQ_CREATE_AI_TABLE:
+			user.uid = msg.Uid
+			onReqCreateAiTable(ws, &user)
+		case REQ_DEAL_POKER:
+			onReqDealPoker(ws, &user)
 		case REQ_SHOT_POKER:
-			onReqShotPoker(ws, &msg)
+			onReqShotPoker(ws, &user, &msg)
 		default:
 			fmt.Printf("unknown req:%d\n", msg.Code)
 			continue
@@ -121,38 +136,22 @@ func webSocketRcv(ws *websocket.Conn) {
 	}
 }
 
-func onReqJoinRoom(ws *websocket.Conn, msg *Message) {
-	msg.Code = RSP_JOIN_ROOM
-	webSocketSendMsg(ws, msg)
-}
-
-func gameOver(ws *websocket.Conn, game IGame, tableId int, uid int) {
+func gameOver(ws *websocket.Conn, game IGame, uid int) {
 	scores := game.CalcScores()
 	rsp := Message{
-		Code:    RSP_GAME_OVER,
-		TableId: tableId,
-		Uid:     uid,
-		Data:    scores,
+		Code: RSP_GAME_OVER,
+		Uid:  uid,
+		Data: scores,
 	}
 	webSocketSendMsg(ws, rsp)
 }
 
-func onReqJoinTable(ws *websocket.Conn, msg *Message) {
-	tableId := msg.TableId
-	if tableId < 1 {
-		tableId = prepreGame()
-	}
-
-	games.mu.RLock()
-	game, ok := games.gamesMap[tableId]
-	games.mu.RUnlock()
-	if !ok {
-		fmt.Printf("table not ready:%d,uid:%d", tableId, msg.Uid)
-		return
-	}
+func onReqCreateAiTable(ws *websocket.Conn, user *UserInfo) {
+	tableId := prepreNewGame()
+	user.tableId = tableId
 
 	data := []PlayerInfo{
-		{Uid: msg.Uid, Name: "terry"},
+		{Uid: user.uid, Name: "terry"},
 		{Uid: 1, Name: "player1"},
 		{Uid: 2, Name: "player2"},
 		{Uid: 3, Name: "player3"},
@@ -160,20 +159,45 @@ func onReqJoinTable(ws *websocket.Conn, msg *Message) {
 	}
 
 	rsp := Message{
-		Code:    RSP_JOIN_TABLE,
-		TableId: tableId,
-		Uid:     msg.Uid,
+		Code:    RSP_CREATE_AI_TABLE,
+		Uid:     user.uid,
+		TableId: user.tableId,
 		Data:    data,
+	}
+
+	webSocketSendMsg(ws, rsp)
+}
+
+func onReqDealPoker(ws *websocket.Conn, user *UserInfo) {
+	games.mu.RLock()
+	game, ok := games.gamesMap[user.tableId]
+	games.mu.RUnlock()
+	if !ok {
+		fmt.Printf("table not ready:%d,uid:%d", user.tableId, user.uid)
+		return
+	}
+
+	data := []PlayerInfo{
+		{Uid: user.uid, Name: "me"},
+		{Uid: 1, Name: "player1"},
+		{Uid: 2, Name: "player2"},
+		{Uid: 3, Name: "player3"},
+		{Uid: 4, Name: "player4"},
+	}
+
+	rsp := Message{
+		Code: RSP_JOIN_TABLE,
+		Uid:  user.uid,
+		Data: data,
 	}
 
 	webSocketSendMsg(ws, rsp)
 
 	remainCards := game.RemainCards(0)
 	rsp = Message{
-		Code:    RSP_DEAL_POKER,
-		TableId: tableId,
-		Uid:     msg.Uid,
-		Data:    remainCards,
+		Code: RSP_DEAL_POKER,
+		Uid:  user.uid,
+		Data: remainCards,
 	}
 
 	//发牌给玩家
@@ -181,14 +205,14 @@ func onReqJoinTable(ws *websocket.Conn, msg *Message) {
 
 	//开始出牌
 	prePlayerId := -1
-	nextRound(ws, tableId, msg.Uid, prePlayerId)
+	nextRound(ws, game, user.uid, prePlayerId)
 
 }
 
-func onReqShotPoker(ws *websocket.Conn, msg *Message) {
-	game := getGame(msg.TableId)
+func onReqShotPoker(ws *websocket.Conn, user *UserInfo, msg *Message) {
+	game := getGame(user.tableId)
 	if game == nil {
-		fmt.Printf("table not found:%d,uid:%d", msg.TableId, msg.Uid)
+		fmt.Printf("table not found:%d,uid:%d", user.tableId, user.uid)
 		return
 	}
 
@@ -206,16 +230,14 @@ func onReqShotPoker(ws *websocket.Conn, msg *Message) {
 	var rsp Message
 	if valid {
 		rsp = Message{
-			Code:    RSP_SHOT_POKER,
-			TableId: msg.TableId,
-			Uid:     msg.Uid,
-			Data:    cards,
+			Code: RSP_SHOT_POKER,
+			Uid:  user.uid,
+			Data: cards,
 		}
 	} else {
 		rsp = Message{
-			Code:    INVALID_POCKER,
-			TableId: msg.TableId,
-			Uid:     msg.Uid,
+			Code: INVALID_POCKER,
+			Uid:  user.uid,
 		}
 	}
 
@@ -224,54 +246,52 @@ func onReqShotPoker(ws *websocket.Conn, msg *Message) {
 		return
 	}
 
-	nextRound(ws, msg.TableId, msg.Uid, 0)
-
+	nextRound(ws, game, user.uid, 0)
 }
 
-func nextRound(ws *websocket.Conn, tableId int, uid int, prePlayerId int) {
-	game := getGame(tableId)
-	if game == nil {
-		fmt.Printf("table not found:%d,uid:%d", tableId, uid)
-		return
-	}
-
+func nextRound(ws *websocket.Conn, game IGame, uid int, prePlayerId int) {
 	var rsp Message
+	var code int
 	for {
-		time.Sleep(time.Second * 2)
 		playerId := game.NextPlayer(prePlayerId)
 		if playerId == -1 {
 			Println("\ngame over")
-			gameOver(ws, game, tableId, uid)
+			gameOver(ws, game, uid)
 			return
 		}
 		prePlayerId = playerId
 		if playerId == 0 {
+			if game.isYourTurn(playerId) {
+				code = YOUR_TURN
+			} else {
+				code = YOU_SHOT
+			}
 			rsp = Message{
-				Code:    YOUR_TURN,
-				TableId: tableId,
-				Uid:     uid,
+				Code: code,
+				Uid:  uid,
 			}
 
 			webSocketSendMsg(ws, rsp)
 			break
 		}
 
+		time.Sleep(time.Second * 2)
+
 		cards, _ := game.PlayerHand(playerId, nil)
 		if cards == nil {
 			cards = []int{}
 		}
 		rsp = Message{
-			Code:    RSP_SHOT_POKER,
-			TableId: tableId,
-			Uid:     playerId,
-			Data:    cards,
+			Code: RSP_SHOT_POKER,
+			Uid:  playerId,
+			Data: cards,
 		}
 
 		webSocketSendMsg(ws, rsp)
 	}
 }
 
-func prepreGame() int {
+func prepreNewGame() int {
 	players := []int{0, 2, 2, 2, 2}
 	game := NewRedTen(players)
 

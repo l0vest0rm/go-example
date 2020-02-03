@@ -46,9 +46,8 @@ PG.Game.prototype = {
   onopen: function () {
     console.log('socket onopen');
     PG.Socket.send({
-      code: PG.Protocol.REQ_JOIN_ROOM,
+      code: PG.Protocol.REQ_CREATE_AI_TABLE,
       uid: this.uid,
-      data: this.roomId
     });
   },
 
@@ -63,6 +62,18 @@ PG.Game.prototype = {
   onmessage: function (msg) {
     var opcode = msg.code;
     switch (opcode) {
+      case PG.Protocol.RSP_CREATE_AI_TABLE:
+        this.tableId = msg.tableId;
+        this.titleBar.text = '房间:' + this.tableId;
+        var playerIds = msg.data;
+        for (var i = 0; i < playerIds.length; i++) {
+          this.players[i].updateInfo(playerIds[i].uid, playerIds[i].name);
+        }
+        PG.Socket.send({
+          code: PG.Protocol.REQ_DEAL_POKER,
+          uid: this.uid,
+        });
+        break;
       case PG.Protocol.RSP_JOIN_ROOM:
         if (this.roomId == 1) {
           PG.Socket.send({
@@ -91,7 +102,10 @@ PG.Game.prototype = {
         }
         break;
       case PG.Protocol.YOUR_TURN:
-        this.startPlay();
+        this.yourTurn();
+        break;
+      case PG.Protocol.YOU_SHOT:
+        this.youShot();
         break;
       case PG.Protocol.INVALID_POCKER:
         this.invalidPoker();
@@ -389,12 +403,12 @@ PG.Game.prototype = {
 
   },
 
-  startPlay: function () {
-    if (this.isLastShotPlayer()) {
-      this.players[0].playPoker([]);
-    } else {
-      this.players[0].playPoker(this.tablePoker);
-    }
+  yourTurn: function () {
+    this.players[0].yourTurn(this.tablePoker);
+  },
+
+  youShot: function () {
+    this.players[0].youShot(this.tablePoker);
   },
 
   invalidPoker: function () {

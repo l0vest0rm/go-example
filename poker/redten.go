@@ -16,6 +16,7 @@ type IGame interface {
 	Vals() []int
 	RemainCards(playerId int) []int
 	NextPlayer(playerId int) int
+	isYourTurn(playerId int) bool
 	PlayerHand(playerId int, candidates []int) ([]int, bool)
 	PrintPlayersRemainCards()
 }
@@ -32,10 +33,8 @@ type RedTen struct {
 	remainCards    CardsVals //整体剩余的卡牌(由大到小排序)
 	hands          []*Hand
 	players        []*Player
-	preHandPlayer  int  //上一个出过牌的人(没出牌不算)
-	checkDuty      bool //是否检查蹲
-	dutyPlayer     int  //要求蹲的人
-	rank           int  //第一个走的
+	lastTurnPlayer int //上一个出过牌的人(没出牌不算)
+	rank           int //第一个走的
 }
 
 type Player struct {
@@ -96,13 +95,11 @@ var (
 func NewRedTen(players []int) IGame {
 	vals := NewCards()
 	t := &RedTen{playerNum: len(players),
-		vals:          vals,
-		hands:         make([]*Hand, 0),
-		players:       make([]*Player, 0),
-		preHandPlayer: -1,
-		checkDuty:     false,
-		dutyPlayer:    -1,
-		rank:          1,
+		vals:           vals,
+		hands:          make([]*Hand, 0),
+		players:        make([]*Player, 0),
+		lastTurnPlayer: -1,
+		rank:           1,
 	}
 	t.ModVals()
 	Shuffle(t.vals)
@@ -338,26 +335,28 @@ func (t *RedTen) NextPlayer(playerId int) int {
 	return -1
 }
 
+func (t *RedTen) isYourTurn(playerId int) bool {
+	if t.lastTurnPlayer == -1 || t.lastTurnPlayer == playerId {
+		return true
+	}
+
+	return false
+}
+
 // 出一手牌,如果返回空表示不出
 func (t *RedTen) PlayerHand(playerId int, candidates []int) (cards []int, valid bool) {
 	//临时数据保存
-	dutyPlayer := t.dutyPlayer
-	checkDuty := t.checkDuty
+	lastTurnPlayer := t.lastTurnPlayer
 
 	init := false
-	if t.preHandPlayer == -1 || t.preHandPlayer == playerId {
+	if t.lastTurnPlayer == -1 || t.lastTurnPlayer == playerId {
 		init = true
 	}
 
-	if t.dutyPlayer == playerId {
-		Printf("\nplayer%d 蹲我", playerId)
-		init = true
-		t.dutyPlayer = -1
-	}
-
-	if t.checkDuty {
-		t.checkDuty = false
-		t.dutyPlayer = playerId
+	//上一个人走了，考虑是否蹲我
+	if t.lastTurnPlayer != -1 && len(t.players[t.lastTurnPlayer].remainCards) == 0 {
+		Printf("\nplayer%d 蹲我吗", playerId)
+		t.lastTurnPlayer = playerId
 	}
 
 	//检查候选是否合法
@@ -369,30 +368,27 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) (cards []int, valid 
 		}
 		if !valid {
 			//恢复现场
-			t.dutyPlayer = dutyPlayer
-			t.checkDuty = checkDuty
+			t.lastTurnPlayer = lastTurnPlayer
 			return nil, false
 		}
 	}
 
 	cards = t.players[playerId].strategy.Hand(playerId, init, t.hands, t.players[playerId].remainCards, candidates)
 	if cards == nil {
-		return cards, true
+		return nil, true
 	}
 
 	Printf("player%d hand:", playerId)
 	PrintCards(cards)
 
 	t.RecordHand(playerId, cards)
+	t.lastTurnPlayer = playerId
 
-	t.preHandPlayer = playerId
-	t.dutyPlayer = -1
 	//看是否出完了
 	if len(t.players[playerId].remainCards) == 0 {
 		Printf("\nplayer%d 走了", playerId)
 		t.players[playerId].rank = t.rank
 		t.rank += 1
-		t.checkDuty = true
 	}
 
 	return cards, true

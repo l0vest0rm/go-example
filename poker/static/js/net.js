@@ -2,6 +2,9 @@ PG.Protocol = {
   REQ_CHEAT: 1,
   RSP_CHEAT: 2,
 
+  REQ_CREATE_AI_TABLE: 3,
+  RSP_CREATE_AI_TABLE: 4,
+
   REQ_LOGIN: 11,
   RSP_LOGIN: 12,
 
@@ -21,7 +24,8 @@ PG.Protocol = {
   RSP_NEW_TABLE: 22,
 
   YOUR_TURN: 23,
-  INVALID_POCKER: 24,
+  YOU_SHOT: 24,
+  INVALID_POCKER: 25,
 
 
   REQ_DEAL_POKER: 31,

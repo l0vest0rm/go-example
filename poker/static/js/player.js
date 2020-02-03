@@ -224,19 +224,34 @@ PG.Player.prototype.canPlay = function (lastTurnPoker, shotPoker) {
   return '出牌需要大于上家';
 };
 
-PG.Player.prototype.playPoker = function (lastTurnPoker) {
+PG.Player.prototype.yourTurn = function (lastTurnPoker) {
   this.lastTurnPoker = lastTurnPoker;
 
   var group = this.shotLayer;
   var step = this.game.world.width / 6;
   var sx = this.game.world.width / 2 - 0.5 * step;
-  if (!this.game.isLastShotPlayer()) {
-    sx -= 0.5 * step;
-    var pass = group.getAt(0);
-    pass.centerX = sx;
-    sx += step;
-    pass.revive();
-  }
+
+  var hint = group.getAt(1);
+  hint.centerX = sx;
+  hint.revive();
+  var shot = group.getAt(2);
+  shot.centerX = sx + step;
+  shot.revive();
+
+  this.enableInput();
+};
+
+PG.Player.prototype.youShot = function (lastTurnPoker) {
+  this.lastTurnPoker = lastTurnPoker;
+
+  var group = this.shotLayer;
+  var step = this.game.world.width / 6;
+  var sx = this.game.world.width / 2 - 0.5 * step;
+  sx -= 0.5 * step;
+  var pass = group.getAt(0);
+  pass.centerX = sx;
+  sx += step;
+  pass.revive();
   var hint = group.getAt(1);
   hint.centerX = sx;
   hint.revive();

@@ -50,7 +50,7 @@ func humanCmdPlay() {
 }
 
 func main() {
-	//webPlay()
+	webPlay()
 	//humanPlay()
-	batchTrain(10, 10000)
+	//batchTrain(10, 10000)
 }
