@@ -11,6 +11,61 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	HONG_1  = 0
+	HONG_2  = 1
+	HONG_3  = 2
+	HONG_4  = 3
+	HONG_5  = 4
+	HONG_6  = 5
+	HONG_7  = 6
+	HONG_8  = 7
+	HONG_9  = 8
+	HONG_10 = 9
+	HONG_11 = 10
+	HONG_12 = 11
+	HONG_13 = 12
+	FANG_1  = 13
+	FANG_2  = 14
+	FANG_3  = 15
+	FANG_4  = 16
+	FANG_5  = 17
+	FANG_6  = 18
+	FANG_7  = 19
+	FANG_8  = 20
+	FANG_9  = 21
+	FANG_10 = 22
+	FANG_11 = 23
+	FANG_12 = 24
+	FANG_13 = 25
+	HEI_1   = 26
+	HEI_2   = 27
+	HEI_3   = 28
+	HEI_4   = 29
+	HEI_5   = 30
+	HEI_6   = 31
+	HEI_7   = 32
+	HEI_8   = 33
+	HEI_9   = 34
+	HEI_10  = 35
+	HEI_11  = 36
+	HEI_12  = 37
+	HEI_13  = 38
+	MEI_1   = 39
+	MEI_2   = 40
+	MEI_3   = 41
+	MEI_4   = 42
+	MEI_5   = 43
+	MEI_6   = 44
+	MEI_7   = 45
+	MEI_8   = 46
+	MEI_9   = 47
+	MEI_10  = 48
+	MEI_11  = 49
+	MEI_12  = 50
+	MEI_13  = 51
+)
+
 var (
 	red    = color.New(color.FgRed).SprintFunc()
 	yellow = color.New(color.FgYellow).SprintFunc()
@@ -129,4 +184,18 @@ func removeCard(cards []int, card int) ([]int, error) {
 	}
 
 	return cards, fmt.Errorf("card not found:%d", card)
+}
+
+func removeCards(remainCards []int, cards []int) ([]int, error) {
+	var err error
+	tmpCards := make([]int, len(remainCards))
+	copy(tmpCards, remainCards)
+	for _, card := range cards {
+		tmpCards, err = removeCard(tmpCards, card)
+		if err != nil {
+			return remainCards, err
+		}
+	}
+
+	return tmpCards, nil
 }

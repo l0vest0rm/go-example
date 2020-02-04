@@ -466,9 +466,11 @@ func findJustBiggerN(cards []int, card int, n int) (vals []int) {
 			continue
 		}
 
-		if sameNum == 0 || valsMap[cards[i]] == preVal {
-			sameNum += 1
+		if valsMap[cards[i]] != preVal {
+			sameNum = 1
 			preVal = valsMap[cards[i]]
+		} else {
+			sameNum++
 		}
 
 		if sameNum == n {
@@ -542,7 +544,6 @@ func NewRobot1(redTen *RedTen) IStrategy {
 func (t *Robot1) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
 	var cards []int
 	typs := arrangeRemainCards(remainCards)
-	PrintArrangeRemainCards(typs)
 	if init {
 		cards = findMultiSame(remainCards, remainCards[0])
 		return cards
@@ -578,7 +579,6 @@ func NewRobot2(redTen *RedTen) IStrategy {
 func (t *Robot2) Hand(playerId int, init bool, hands []*Hand, remainCards []int, candidates []int) []int {
 	var cards []int
 	typs := arrangeRemainCards(remainCards)
-	PrintArrangeRemainCards(typs)
 	if init {
 		cards = findMultiSame(remainCards, remainCards[0])
 		return cards
@@ -785,4 +785,181 @@ func validateBigger(preCards []int, cards []int) bool {
 	}
 
 	return false
+}
+
+func findWinHand(a []int, b []int, preHand []int) []int {
+	var candidates [][]int
+	if preHand == nil || len(preHand) == 0 {
+		//新出
+		candidates = aviableCandidates(a)
+	} else {
+		candidates = aviableBiggerCandidates(a, preHand)
+		candidates = append(candidates, []int{})
+	}
+
+	//PrintCandidatesCards(candidates)
+	for i := 0; i < len(candidates); i++ {
+		a1, err := removeCards(a, candidates[i])
+		if err != nil {
+			panic(err)
+		}
+
+		if len(a1) == 0 {
+			//fmt.Printf("\nlen(a1) == 0:%v", ConvertVals2PrintChars(candidates[i]))
+			return candidates[i]
+		}
+
+		if innerFindWinSolution(a1, b, candidates[i], false) {
+			//fmt.Printf("\ncandidatesA:%v", ConvertVals2PrintChars(candidates[i]))
+			return candidates[i]
+		}
+	}
+
+	return nil
+}
+
+//返回是否继续出牌
+func innerFindWinSolution(a []int, b []int, preHand []int, firstTurn bool) bool {
+	var turn []int
+	var candidates [][]int
+	if firstTurn {
+		turn = a
+	} else {
+		turn = b
+	}
+
+	if preHand == nil || len(preHand) == 0 {
+		//新出
+		candidates = aviableCandidates(turn)
+	} else {
+		candidates = aviableBiggerCandidates(turn, preHand)
+		candidates = append(candidates, []int{})
+	}
+
+	if firstTurn {
+		for i := 0; i < len(candidates); i++ {
+			a1, err := removeCards(a, candidates[i])
+			if err != nil {
+				panic(err)
+			}
+
+			if len(a1) == 0 {
+				//fmt.Printf("\n innerFindWinSolution,len(a1) == 0:%v", ConvertVals2PrintChars(candidates[i]))
+				return true
+			}
+
+			if innerFindWinSolution(a1, b, candidates[i], false) {
+				//fmt.Printf("\n innerFindWinSolution,candidatesA:%v", ConvertVals2PrintChars(candidates[i]))
+				return true
+			}
+		}
+
+		return false
+	}
+
+	//得要所有的b出牌策略都赢才算赢
+	for i := 0; i < len(candidates); i++ {
+		b1, err := removeCards(b, candidates[i])
+		if err != nil {
+			panic(err)
+		}
+
+		if len(b1) == 0 {
+			return false
+		}
+
+		if !innerFindWinSolution(a, b1, candidates[i], true) {
+			return false
+		}
+	}
+
+	//fmt.Printf("\n innerFindWinSolution,anyB,A:%v,B:%v,preHand:%v", ConvertVals2PrintChars(a), ConvertVals2PrintChars(b), ConvertVals2PrintChars(preHand))
+	return true
+}
+
+func aviableCandidates(remainCards []int) [][]int {
+	candidates := make([][]int, 0)
+	candidates = append(candidates, []int{remainCards[0]})
+	for i := 1; i < len(remainCards); i++ {
+		if valsMap[remainCards[i-1]] != valsMap[remainCards[i]] {
+			candidates = append(candidates, []int{remainCards[i]})
+			continue
+		}
+
+		//值一样的牌，升级拷贝
+		cards := candidates[len(candidates)-1]
+		//typs[n] = typs[n][:l-1]
+		newCards := make([]int, len(cards))
+		copy(newCards, cards)
+		newCards = append(newCards, remainCards[i])
+		candidates = append(candidates, newCards)
+	}
+
+	return candidates
+}
+
+func PrintCandidatesCards(candidates [][]int) {
+	for i := 0; i < len(candidates); i++ {
+		PrintCards(candidates[i])
+		Printf(";")
+	}
+}
+
+func aviableCandidatesOld(remainCards []int) [][][]int {
+	typs := make([][][]int, 4, 4)
+	n := 0
+	typs[0] = make([][]int, 0, 0)
+	typs[0] = append(typs[0], []int{remainCards[0]})
+	for i := 1; i < len(remainCards); i++ {
+		if valsMap[remainCards[i-1]] != valsMap[remainCards[i]] {
+			n = 0
+			typs[n] = append(typs[n], []int{remainCards[i]})
+			continue
+		}
+
+		//值一样的牌，升级拷贝
+		l := len(typs[n])
+		cards := typs[n][l-1]
+		//typs[n] = typs[n][:l-1]
+		newCards := make([]int, len(cards))
+		copy(newCards, cards)
+		newCards = append(newCards, remainCards[i])
+		n += 1
+		if typs[n] == nil {
+			typs[n] = make([][]int, 0, 0)
+		}
+		typs[n] = append(typs[n], newCards)
+	}
+
+	return typs
+}
+
+func aviableBiggerCandidates(cards []int, preHand []int) [][]int {
+	//找一个刚好大过上家的
+	sameNum := 0
+	preVal := -1
+	card := preHand[0]
+	n := len(preHand)
+	candidates := make([][]int, 0)
+	for i := 0; i < len(cards); i++ {
+		if valsMap[card] >= valsMap[cards[i]] {
+			continue
+		}
+
+		if valsMap[cards[i]] != preVal {
+			sameNum = 1
+			preVal = valsMap[cards[i]]
+		} else {
+			sameNum++
+		}
+
+		if sameNum == n {
+			vals := make([]int, 0)
+			for j := 0; j < n; j++ {
+				vals = append(vals, cards[i-j])
+			}
+			candidates = append(candidates, vals)
+		}
+	}
+	return candidates
 }
