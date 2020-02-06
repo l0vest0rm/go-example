@@ -104,11 +104,11 @@ func ConvertVal2PrintChars(val int) string {
 	if val < 13 {
 		return fmt.Sprintf("%s%d", red("♥"), val+1)
 	} else if val < 26 {
-		return fmt.Sprintf("%s%d", blue("♠"), val-12)
+		return fmt.Sprintf("%s%d", blue("♦"), val-12)
 	} else if val < 39 {
-		return fmt.Sprintf("%s%d", green("♣"), val-25)
+		return fmt.Sprintf("%s%d", green("♠"), val-25)
 	} else if val < 52 {
-		return fmt.Sprintf("%s%d", yellow("♦"), val-38)
+		return fmt.Sprintf("%s%d", yellow("♣"), val-38)
 	} else if val == 52 {
 		return cyan("King")
 	} else {

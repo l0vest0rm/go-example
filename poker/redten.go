@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"./minimax"
 )
 
 type CardsVals []int
@@ -962,4 +964,89 @@ func aviableBiggerCandidates(cards []int, preHand []int) [][]int {
 		}
 	}
 	return candidates
+}
+
+func findWinHand2(a []int, b []int, preHand []int) []int {
+	var candidates [][]int
+	if preHand == nil || len(preHand) == 0 {
+		//新出
+		candidates = aviableCandidates(a)
+	} else {
+		candidates = aviableBiggerCandidates(a, preHand)
+		candidates = append(candidates, []int{})
+	}
+
+	root := minimax.New()
+	expandNode(root, a, b, nil)
+	//fmt.Println("")
+	//root.Print(0)
+
+	childNode := root.GetBestChildNode()
+	if childNode != nil && childNode.Data != nil {
+		return childNode.Data.([]int)
+	}
+
+	return nil
+}
+
+func expandNode(parent *minimax.Node, a []int, b []int, preHand []int) {
+	var turn []int
+	var candidates [][]int
+	var node *minimax.Node
+
+	if parent.IsMiniNode {
+		turn = a
+	} else {
+		turn = b
+	}
+
+	if preHand == nil || len(preHand) == 0 {
+		//新出
+		candidates = aviableCandidates(turn)
+	} else {
+		candidates = aviableBiggerCandidates(turn, preHand)
+		candidates = append(candidates, []int{})
+	}
+
+	if parent.IsMiniNode {
+		for i := 0; i < len(candidates); i++ {
+			if parent.NeedCut() {
+				return
+			}
+
+			a1, err := removeCards(a, candidates[i])
+			if err != nil {
+				panic(err)
+			}
+
+			if len(a1) == 0 {
+				//fmt.Printf("\n innerFindWinSolution,len(a1) == 0:%v", ConvertVals2PrintChars(candidates[i]))
+				node = parent.AddLeafChild(candidates[i], 1)
+				return
+			}
+
+			node = parent.AddChild(candidates[i])
+			expandNode(node, a1, b, candidates[i])
+		}
+	} else {
+		for i := 0; i < len(candidates); i++ {
+			if parent.NeedCut() {
+				return
+			}
+
+			b1, err := removeCards(b, candidates[i])
+			if err != nil {
+				panic(err)
+			}
+
+			if len(b1) == 0 {
+				//fmt.Printf("\n innerFindWinSolution,len(b1) == 0:%v,%v,%v,%v", a, b, ConvertVals2PrintChars(candidates[i]), candidates)
+				node = parent.AddLeafChild(candidates[i], -1)
+				continue
+			}
+
+			node = parent.AddChild(candidates[i])
+			expandNode(node, a, b1, candidates[i])
+		}
+	}
 }

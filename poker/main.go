@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"./minimax"
 )
 
 func servStatic(w http.ResponseWriter, r *http.Request) {
@@ -53,8 +55,15 @@ func humanCmdPlay() {
 func test() {
 	a := []int{HONG_3, HONG_4, HONG_5, FANG_5, HONG_6, FANG_6}
 	b := []int{HEI_3, HEI_4, HEI_5, MEI_5, HEI_7, MEI_7}
-	cards := findWinHand(a, b, nil)
-	fmt.Println("findWinHand:", ConvertVals2PrintChars(cards))
+	//a := []int{HONG_3, HONG_4}
+	//b := []int{HEI_3, HEI_4}
+	t1 := time.Now().UnixNano()
+	findWinHand(a, b, nil)
+	t2 := time.Now().UnixNano()
+	findWinHand2(a, b, nil)
+	t3 := time.Now().UnixNano()
+
+	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d\n", t2-t1, t3-t2)
 	time.Sleep(time.Second)
 	/*for i := 0; i < 13; i++ {
 		fmt.Printf("\nHONG_%d = %d", i+1, i)
@@ -68,6 +77,13 @@ func test() {
 	for i := 0; i < 13; i++ {
 		fmt.Printf("\nMEI_%d = %d", i+1, i+39)
 	}*/
+}
+
+func test2() {
+	root := minimax.New()
+	_ = root.AddLeafChild(nil, 1)
+	fmt.Println("")
+	root.Print(0)
 }
 
 func main() {
