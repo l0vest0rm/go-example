@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"./card"
 	"./gomcts"
 )
 
@@ -95,7 +96,7 @@ var (
 )
 
 func NewRedTen(players []int) IGame {
-	vals := NewCards()
+	vals := card.NewCards()
 	t := &RedTen{playerNum: len(players),
 		vals:           vals,
 		hands:          make([]*Hand, 0),
@@ -104,7 +105,7 @@ func NewRedTen(players []int) IGame {
 		rank:           1,
 	}
 	t.ModVals()
-	Shuffle(t.vals)
+	card.Shuffle(t.vals)
 	if t.playerNum == 4 || t.playerNum == 5 {
 		t.totalRedTenNum = 2
 	}
@@ -194,7 +195,7 @@ func (t *RedTen) PrintPlayersRemainCards() {
 
 		if i == 0 {
 			Printf("\nplayer%d,有%d张牌:", i, len(t.players[i].remainCards))
-			PrintCards(t.players[i].remainCards)
+			card.PrintCards(t.players[i].remainCards)
 		} else {
 			Printf("\nplayer%d,有%d张牌", i, n)
 		}
@@ -204,7 +205,7 @@ func (t *RedTen) PrintPlayersRemainCards() {
 func (t *RedTen) PrintPlayersInitCards() {
 	for i := 0; i < t.playerNum; i++ {
 		Printf("\nplayer%d,rank:%d,", i, t.players[i].rank)
-		PrintCards(t.players[i].initCards)
+		card.PrintCards(t.players[i].initCards)
 	}
 }
 
@@ -381,7 +382,7 @@ func (t *RedTen) PlayerHand(playerId int, candidates []int) (cards []int, valid 
 	}
 
 	Printf("player%d hand:", playerId)
-	PrintCards(cards)
+	card.PrintCards(cards)
 
 	t.RecordHand(playerId, cards)
 	t.lastTurnPlayer = playerId
@@ -401,15 +402,15 @@ func (t *RedTen) RecordHand(playerId int, cards []int) {
 	hand := &Hand{init: true, playerId: playerId, cards: cards}
 	t.hands = append(t.hands, hand)
 	player := t.players[playerId]
-	for _, card := range cards {
-		player.remainCards, err = removeCard(player.remainCards, card)
+	for _, c := range cards {
+		player.remainCards, err = card.RemoveCard(player.remainCards, c)
 		if err != nil {
-			fmt.Println("not found in player cards", playerId, card)
+			fmt.Println("not found in player cards", playerId, c)
 		}
 
-		t.remainCards, err = removeCard(t.remainCards, card)
+		t.remainCards, err = card.RemoveCard(t.remainCards, c)
 		if err != nil {
-			fmt.Println("not found in total remain cards", playerId, card)
+			fmt.Println("not found in total remain cards", playerId, c)
 		}
 	}
 }
@@ -418,7 +419,7 @@ func convertStr2Val(input string) ([]int, error) {
 	cards := strings.Split(input, ",")
 	vals := make([]int, 0)
 	for i := 0; i < len(cards); i++ {
-		val, err := ConvertStr2Val(cards[i])
+		val, err := card.ConvertStr2Val(cards[i])
 		if err != nil {
 			return nil, err
 		}
@@ -640,16 +641,16 @@ func PrintArrangeRemainCards(typs [][][]int) {
 	for i := 0; i < len(typs); i++ {
 		Printf("\n牌型%d:", i)
 		for j := 0; j < len(typs[i]); j++ {
-			PrintCards(typs[i][j])
+			card.PrintCards(typs[i][j])
 			Printf(";")
 		}
 	}
 }
 
-func findJustBiggerN2(cardss [][]int, card int) (vals []int) {
+func findJustBiggerN2(cardss [][]int, c int) (vals []int) {
 	//找一个刚好大过上家的
 	for i := 0; i < len(cardss); i++ {
-		if valsMap[card] >= valsMap[cardss[i][0]] {
+		if valsMap[c] >= valsMap[cardss[i][0]] {
 			continue
 		}
 		vals = make([]int, len(cardss[i]))
@@ -658,7 +659,7 @@ func findJustBiggerN2(cardss [][]int, card int) (vals []int) {
 	}
 
 	Printf("\nfindJustBiggerN2:")
-	PrintCards(vals)
+	card.PrintCards(vals)
 
 	return vals
 }
@@ -801,7 +802,7 @@ func findWinHand(a []int, b []int, preHand []int) []int {
 
 	//PrintCandidatesCards(candidates)
 	for i := 0; i < len(candidates); i++ {
-		a1, err := removeCards(a, candidates[i])
+		a1, err := card.RemoveCards(a, candidates[i])
 		if err != nil {
 			panic(err)
 		}
@@ -840,7 +841,7 @@ func innerFindWinSolution(a []int, b []int, preHand []int, firstTurn bool) bool 
 
 	if firstTurn {
 		for i := 0; i < len(candidates); i++ {
-			a1, err := removeCards(a, candidates[i])
+			a1, err := card.RemoveCards(a, candidates[i])
 			if err != nil {
 				panic(err)
 			}
@@ -861,7 +862,7 @@ func innerFindWinSolution(a []int, b []int, preHand []int, firstTurn bool) bool 
 
 	//得要所有的b出牌策略都赢才算赢
 	for i := 0; i < len(candidates); i++ {
-		b1, err := removeCards(b, candidates[i])
+		b1, err := card.RemoveCards(b, candidates[i])
 		if err != nil {
 			panic(err)
 		}
@@ -902,7 +903,7 @@ func aviableCandidates(remainCards []int) [][]int {
 
 func PrintCandidatesCards(candidates [][]int) {
 	for i := 0; i < len(candidates); i++ {
-		PrintCards(candidates[i])
+		card.PrintCards(candidates[i])
 		Printf(";")
 	}
 }
@@ -989,9 +990,9 @@ func (t *RedTenGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 	}
 
 	if t.nextToMove == 1 {
-		newState.a, err = removeCards(newState.a, t.hand)
+		newState.a, err = card.RemoveCards(newState.a, t.hand)
 	} else {
-		newState.b, err = removeCards(newState.b, t.hand)
+		newState.b, err = card.RemoveCards(newState.b, t.hand)
 	}
 
 	if err != nil {
@@ -1053,7 +1054,7 @@ func (t *RedTenGameState) NextToMove() int8 {
 }
 
 // CreateRedTenInitialGameState - initializes tic tac toe game state
-func CreateRedTenInitialGameState(a, b, preHand []int, nextToMove int8) RedTenGameState {
-	state := RedTenGameState{a: a, b: b, preHand: preHand, nextToMove: nextToMove}
+func CreateRedTenInitialGameState(a, b, preHand []int) RedTenGameState {
+	state := RedTenGameState{a: a, b: b, preHand: preHand, nextToMove: 1}
 	return state
 }

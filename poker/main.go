@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"./card"
 	"./gomcts"
 )
 
@@ -53,11 +54,11 @@ func humanCmdPlay() {
 }
 
 func test() {
-	a := []int{HONG_3, HONG_4, HONG_5, FANG_5, HONG_6, FANG_6}
-	b := []int{HEI_3, HEI_4, HEI_5, MEI_5, HEI_7, MEI_7}
+	a := []int{card.HONG_3, card.HONG_4, card.HONG_5, card.FANG_5, card.HONG_6, card.FANG_6}
+	b := []int{card.HEI_3, card.HEI_4, card.HEI_5, card.MEI_5, card.HEI_7, card.MEI_7}
 	//a := []int{HONG_3, HONG_4}
 	//b := []int{HEI_3, HEI_4}
-	initialState := CreateRedTenInitialGameState(a, b, nil, 1)
+	initialState := CreateRedTenInitialGameState(a, b, nil)
 	t1 := time.Now().UnixNano()
 	findWinHand(a, b, nil)
 	t2 := time.Now().UnixNano()

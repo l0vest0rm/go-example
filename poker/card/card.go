@@ -1,4 +1,4 @@
-package main
+package card
 
 import (
 	"errors"
@@ -96,7 +96,7 @@ func Shuffle(vals []int) {
 
 func PrintCards(vals []int) {
 	for i := 0; i < len(vals); i++ {
-		Printf("%s,", ConvertVal2PrintChars(vals[i]))
+		fmt.Printf("%s,", ConvertVal2PrintChars(vals[i]))
 	}
 }
 
@@ -168,7 +168,7 @@ func ConvertStr2Val(str string) (int, error) {
 	}
 }
 
-func removeCard(cards []int, card int) ([]int, error) {
+func RemoveCard(cards []int, card int) ([]int, error) {
 	l := len(cards)
 	found := false
 	for i := 0; i < l; i++ {
@@ -186,12 +186,12 @@ func removeCard(cards []int, card int) ([]int, error) {
 	return cards, fmt.Errorf("card not found:%d", card)
 }
 
-func removeCards(remainCards []int, cards []int) ([]int, error) {
+func RemoveCards(remainCards []int, cards []int) ([]int, error) {
 	var err error
 	tmpCards := make([]int, len(remainCards))
 	copy(tmpCards, remainCards)
 	for _, card := range cards {
-		tmpCards, err = removeCard(tmpCards, card)
+		tmpCards, err = RemoveCard(tmpCards, card)
 		if err != nil {
 			return remainCards, err
 		}
