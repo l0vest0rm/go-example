@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"./gomcts"
-	"./minimax"
 )
 
 func servStatic(w http.ResponseWriter, r *http.Request) {
@@ -58,13 +57,13 @@ func test() {
 	b := []int{HEI_3, HEI_4, HEI_5, MEI_5, HEI_7, MEI_7}
 	//a := []int{HONG_3, HONG_4}
 	//b := []int{HEI_3, HEI_4}
+	initialState := CreateRedTenInitialGameState(a, b, nil, 1)
 	t1 := time.Now().UnixNano()
 	findWinHand(a, b, nil)
 	t2 := time.Now().UnixNano()
-	_ = findWinHand2(a, b, nil)
+	hand := gomcts.MiniMaxSearch(&initialState)
 	t3 := time.Now().UnixNano()
-	initialState := CreateRedTenInitialGameState(a, b, nil, 1)
-	hand := gomcts.MonteCarloTreeSearch(&initialState, gomcts.DefaultRolloutPolicy, 1000)
+	_ = gomcts.MonteCarloTreeSearch(&initialState, gomcts.DefaultRolloutPolicy, 1000)
 	t4 := time.Now().UnixNano()
 
 	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d,t4-t3:%d,hand:%v\n", t2-t1, t3-t2, t4-t3, hand)
@@ -81,13 +80,6 @@ func test() {
 	for i := 0; i < 13; i++ {
 		fmt.Printf("\nMEI_%d = %d", i+1, i+39)
 	}*/
-}
-
-func test2() {
-	root := minimax.New()
-	_ = root.AddLeafChild(nil, 1)
-	fmt.Println("")
-	root.Print(0)
 }
 
 func main() {
