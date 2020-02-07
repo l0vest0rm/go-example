@@ -14,6 +14,12 @@ type Node struct {
 	children   []*Node
 }
 
+// IEvaluation 相关评估接口
+type IEvaluation interface {
+	GetAvaiableChoices(parent *Node, a, b interface{}) []interface{}
+	Action(parent *Node, a, b interface{}, choice interface{}) (a1, b1 interface{}, score int, isLeaf bool)
+}
+
 // New 新跟节点
 func New() *Node {
 	node := Node{parent: nil, IsMiniNode: true, alpha: math.MinInt32, beta: math.MaxInt32}
@@ -127,4 +133,22 @@ func min(x, y int) int {
 		return y
 	}
 	return x
+}
+
+func ExpandNode(ie IEvaluation, parent *Node, a, b interface{}) {
+	var node *Node
+	choices := ie.GetAvaiableChoices(parent, a, b)
+	for i := 0; i < len(choices); i++ {
+		if parent.NeedCut() {
+			return
+		}
+
+		a1, b1, score, isLeaf := ie.Action(parent, a, b, choices[i])
+		if isLeaf {
+			node = parent.AddLeafChild(choices[i], score)
+		} else {
+			node = parent.AddChild(choices[i])
+			ExpandNode(ie, node, a1, b1)
+		}
+	}
 }

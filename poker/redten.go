@@ -977,7 +977,10 @@ func findWinHand2(a []int, b []int, preHand []int) []int {
 	}
 
 	root := minimax.New()
-	expandNode(root, a, b, nil)
+
+	e := &Evaluation{}
+	minimax.ExpandNode(e, root, a, b)
+	//expandNode(root, a, b, nil)
 	//fmt.Println("")
 	//root.Print(0)
 
@@ -1049,4 +1052,71 @@ func expandNode(parent *minimax.Node, a []int, b []int, preHand []int) {
 			expandNode(node, a, b1, candidates[i])
 		}
 	}
+}
+
+// Evaluation 评估相关函数
+type Evaluation struct {
+}
+
+func (t *Evaluation) GetAvaiableChoices(parent *minimax.Node, a, b interface{}) []interface{} {
+	var turn []int
+	var candidates [][]int
+
+	if parent.IsMiniNode {
+		turn = a.([]int)
+	} else {
+		turn = b.([]int)
+	}
+
+	if parent.Data == nil || len(parent.Data.([]int)) == 0 {
+		//新出
+		candidates = aviableCandidates(turn)
+	} else {
+		candidates = aviableBiggerCandidates(turn, parent.Data.([]int))
+		candidates = append(candidates, []int{})
+	}
+
+	choices := make([]interface{}, len(candidates))
+	for i := 0; i < len(candidates); i++ {
+		choices[i] = candidates[i]
+	}
+
+	return choices
+}
+func (t *Evaluation) Action(parent *minimax.Node, a, b interface{}, choice interface{}) (a1, b1 interface{}, score int, isLeaf bool) {
+	//var a2, b2 []int
+	var err error
+
+	if parent.IsMiniNode {
+		a1, err = removeCards(a.([]int), choice.([]int))
+		//a1 = a2
+		b1 = b
+		if err != nil {
+			panic(err)
+		}
+		if len(a1.([]int)) == 0 {
+			score = 1
+			isLeaf = true
+		}
+
+	} else {
+		if choice == nil {
+			panic("choice == nil")
+		}
+		if b == nil {
+			panic("b == nil")
+		}
+		b1, err = removeCards(b.([]int), choice.([]int))
+		a1 = a
+		//b1 = b
+		if err != nil {
+			panic(err)
+		}
+		if len(b1.([]int)) == 0 {
+			score = -1
+			isLeaf = true
+		}
+	}
+
+	return
 }

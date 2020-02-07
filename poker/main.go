@@ -60,10 +60,10 @@ func test() {
 	t1 := time.Now().UnixNano()
 	findWinHand(a, b, nil)
 	t2 := time.Now().UnixNano()
-	findWinHand2(a, b, nil)
+	hand := findWinHand2(a, b, nil)
 	t3 := time.Now().UnixNano()
 
-	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d\n", t2-t1, t3-t2)
+	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d,hand:%v\n", t2-t1, t3-t2, hand)
 	time.Sleep(time.Second)
 	/*for i := 0; i < 13; i++ {
 		fmt.Printf("\nHONG_%d = %d", i+1, i)
