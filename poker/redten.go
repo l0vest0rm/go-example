@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"./gomcts"
 	"./minimax"
 )
 
@@ -1119,4 +1120,96 @@ func (t *Evaluation) Action(parent *minimax.Node, a, b interface{}, choice inter
 	}
 
 	return
+}
+
+// mcts算法相关
+
+// RedTenGameAction - action on a tic tac toe board game
+type RedTenGameAction struct {
+	hand       []int
+	nextToMove int8
+}
+
+func (t *RedTenGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
+	var err error
+	state := s.(*RedTenGameState)
+	if state.nextToMove != t.nextToMove {
+		panic("wrong turn")
+	}
+
+	newState := &RedTenGameState{
+		a:          state.a,
+		b:          state.b,
+		preHand:    t.hand,
+		nextToMove: -1 * state.nextToMove,
+	}
+
+	if t.nextToMove == 1 {
+		newState.a, err = removeCards(newState.a, t.hand)
+	} else {
+		newState.b, err = removeCards(newState.b, t.hand)
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	return newState
+}
+
+type RedTenGameState struct {
+	a          []int
+	b          []int
+	preHand    []int
+	nextToMove int8
+}
+
+func (t *RedTenGameState) EvaluateGame() (gomcts.GameResult, bool) {
+	if len(t.a) == 0 {
+		return 1, true
+	} else if len(t.b) == 0 {
+		return -1, true
+	} else {
+		return 0, false
+	}
+}
+
+func (t *RedTenGameState) GetLegalActions() []gomcts.Action {
+	var turn []int
+	var candidates [][]int
+
+	if t.nextToMove == 1 {
+		turn = t.a
+	} else {
+		turn = t.b
+	}
+
+	if t.preHand == nil || len(t.preHand) == 0 {
+		//新出
+		candidates = aviableCandidates(turn)
+	} else {
+		candidates = aviableBiggerCandidates(turn, t.preHand)
+		candidates = append(candidates, []int{})
+	}
+
+	actions := make([]gomcts.Action, len(candidates))
+	for i := 0; i < len(candidates); i++ {
+		actions[i] = &RedTenGameAction{hand: candidates[i], nextToMove: t.nextToMove}
+	}
+	return actions
+}
+
+func (t *RedTenGameState) IsGameEnded() bool {
+	_, ended := t.EvaluateGame()
+	return ended
+}
+
+func (t *RedTenGameState) NextToMove() int8 {
+	return t.nextToMove
+}
+
+// CreateRedTenInitialGameState - initializes tic tac toe game state
+func CreateRedTenInitialGameState(a, b, preHand []int, nextToMove int8) RedTenGameState {
+	state := RedTenGameState{a: a, b: b, preHand: preHand, nextToMove: nextToMove}
+	return state
 }
