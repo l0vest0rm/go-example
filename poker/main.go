@@ -87,6 +87,14 @@ func test() {
 func test2() {
 	game := dizhu.NewDoudizhuGame(dizhu.ROLE_DIZHU)
 	game.Run()
+	//game.Test()
+}
+
+func test3() {
+	inHand := []int{15, 29, 30}
+	preHand := []int{3}
+	candidates := aviableBiggerCandidates(inHand, preHand)
+	fmt.Printf("test3,candidates:%v", candidates)
 }
 
 func main() {

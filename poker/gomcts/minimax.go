@@ -19,9 +19,9 @@ type miniMaxNode struct {
 func MiniMaxSearch(state GameState) (Action, bool) {
 	root := newMiniMaxNode(state)
 	bestChild := expandNode(root)
-	root.Print()
+	//root.Print()
 
-	if bestChild.beta > 0 {
+	if bestChild.beta > 0 && bestChild.beta < 2 {
 		return bestChild.causingAction, true
 	} else {
 		return bestChild.causingAction, false

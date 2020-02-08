@@ -166,11 +166,25 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 			candidates = aviableCandidates(t.inHands[turn])
 		} else {
 			candidates = aviableBiggerCandidates(t.inHands[turn], t.preHand)
+			candidates = append(candidates, []int{})
 		}
 
 		turn = (turn + 1) % 3
 		for i := 0; i < len(candidates); i++ {
-			candidates2 = aviableBiggerCandidates(t.inHands[turn], candidates[i])
+			//前一个农民没要或者上轮此人出没人要
+			if len(candidates[i]) == 0 {
+				if t.preRole == turn {
+					//上轮此人出没人要
+					candidates2 = aviableCandidates(t.inHands[turn])
+				} else {
+					candidates2 = aviableBiggerCandidates(t.inHands[turn], t.preHand)
+					candidates2 = append(candidates2, []int{})
+				}
+			} else {
+				candidates2 = aviableBiggerCandidates(t.inHands[turn], candidates[i])
+				candidates2 = append(candidates2, []int{})
+			}
+
 			for j := 0; j < len(candidates2); j++ {
 				printActions = append(printActions, [][]int{candidates[i], candidates2[j]})
 				action := &DoudizhuGameAction{hands: make([][]int, 2)}
@@ -178,22 +192,6 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 				action.hands[1] = candidates2[j]
 				actions = append(actions, action)
 			}
-		}
-
-		//考虑前一个人不出的情况
-		if t.preRole == turn {
-			//上轮此人出没人要
-			candidates2 = aviableCandidates(t.inHands[turn])
-		} else {
-			candidates2 = aviableBiggerCandidates(t.inHands[turn], t.preHand)
-			candidates2 = append(candidates2, []int{})
-		}
-		for j := 0; j < len(candidates2); j++ {
-			printActions = append(printActions, [][]int{[]int{}, candidates2[j]})
-			action := &DoudizhuGameAction{hands: make([][]int, 2)}
-			action.hands[0] = []int{}
-			action.hands[1] = candidates2[j]
-			actions = append(actions, action)
 		}
 	}
 
@@ -271,7 +269,7 @@ func (t *DoudizhuGame) Run() {
 	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11}
 	for i := 0; i < 3; i++ {
 		//l := len(t.players[i].remainCards)
-		remainCards[i] = t.players[i].remainCards[:3]
+		remainCards[i] = t.players[i].remainCards[:7]
 	}
 	for i := 0; i < 3; i++ {
 		fmt.Printf("\nplayer%d:", i)
@@ -282,4 +280,21 @@ func (t *DoudizhuGame) Run() {
 	hand, win := gomcts.MiniMaxSearch(&initState)
 	t2 := time.Now().Unix()
 	fmt.Printf("\n(t *DoudizhuGame) Run(), t2-r1=%d, hand:%v,win:%v\n", t2-t1, card.ConvertVals2PrintChars(hand.(*DoudizhuGameAction).hands[0]), win)
+}
+
+func (t *DoudizhuGame) Test() {
+	state := &DoudizhuGameState{
+		myRole:     0,
+		inHands:    [][]int{[]int{28, 42}, []int{15, 29, 30}, []int{2, 41, 16}},
+		preHand:    []int{3},
+		preRole:    0,
+		nextToMove: -1,
+	}
+	state.GetLegalActions()
+
+	/*
+		player0:♦3,♥3,♠3,♦4,♥5,♣5,♦5,
+		player1:♣3,♣4,♥6,♦7,♥9,♣10,♠10,
+		player2:♠4,♥4,♠5,♣6,♠6,♠7,♣7,
+	*/
 }
