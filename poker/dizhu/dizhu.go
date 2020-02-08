@@ -3,6 +3,7 @@ package dizhu
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"../card"
 	"../gomcts"
@@ -95,6 +96,7 @@ func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 		}
 	}
 
+	//fmt.Printf("\nApplyTo,state:%v,newState:%v,action:%v", state, newState, t)
 	return newState
 }
 
@@ -137,6 +139,7 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 	var candidates [][]int
 	var candidates2 [][]int
 	var actions []gomcts.Action
+	printActions := make([][][]int, 0)
 
 	if t.nextToMove == 1 {
 		//轮到我了
@@ -150,6 +153,7 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 
 		actions = make([]gomcts.Action, len(candidates))
 		for i := 0; i < len(candidates); i++ {
+			printActions = append(printActions, [][]int{candidates[i]})
 			actions[i] = &DoudizhuGameAction{hands: make([][]int, 1)}
 			actions[i].(*DoudizhuGameAction).hands[0] = candidates[i]
 		}
@@ -168,6 +172,7 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 		for i := 0; i < len(candidates); i++ {
 			candidates2 = aviableBiggerCandidates(t.inHands[turn], candidates[i])
 			for j := 0; j < len(candidates2); j++ {
+				printActions = append(printActions, [][]int{candidates[i], candidates2[j]})
 				action := &DoudizhuGameAction{hands: make([][]int, 2)}
 				action.hands[0] = candidates[i]
 				action.hands[1] = candidates2[j]
@@ -181,8 +186,10 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 			candidates2 = aviableCandidates(t.inHands[turn])
 		} else {
 			candidates2 = aviableBiggerCandidates(t.inHands[turn], t.preHand)
+			candidates2 = append(candidates2, []int{})
 		}
 		for j := 0; j < len(candidates2); j++ {
+			printActions = append(printActions, [][]int{[]int{}, candidates2[j]})
 			action := &DoudizhuGameAction{hands: make([][]int, 2)}
 			action.hands[0] = []int{}
 			action.hands[1] = candidates2[j]
@@ -190,6 +197,7 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 		}
 	}
 
+	//fmt.Printf("\nGetLegalActions,state:%v,actions:%v", t, printActions)
 	return actions
 }
 
@@ -258,10 +266,20 @@ func (t *DoudizhuGame) PrintRemainCards() {
 
 func (t *DoudizhuGame) Run() {
 	remainCards := make([][]int, 3)
+	remainCards[0] = []int{card.HONG_3, card.HONG_7, card.FANG_7}
+	remainCards[1] = []int{card.HONG_4, card.HONG_8, card.HONG_9}
+	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11}
 	for i := 0; i < 3; i++ {
-		remainCards[i] = t.players[i].remainCards
+		//l := len(t.players[i].remainCards)
+		remainCards[i] = t.players[i].remainCards[:3]
 	}
+	for i := 0; i < 3; i++ {
+		fmt.Printf("\nplayer%d:", i)
+		card.PrintCards(remainCards[i])
+	}
+	t1 := time.Now().Unix()
 	initState := CreateDoudizhuGameState(ROLE_DIZHU, remainCards, nil, -1)
-	hand := gomcts.MiniMaxSearch(&initState)
-	fmt.Printf("\n(t *DoudizhuGame) Run() hand:%v", hand)
+	hand, win := gomcts.MiniMaxSearch(&initState)
+	t2 := time.Now().Unix()
+	fmt.Printf("\n(t *DoudizhuGame) Run(), t2-r1=%d, hand:%v,win:%v\n", t2-t1, card.ConvertVals2PrintChars(hand.(*DoudizhuGameAction).hands[0]), win)
 }

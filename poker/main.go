@@ -63,12 +63,12 @@ func test() {
 	t1 := time.Now().UnixNano()
 	findWinHand(a, b, nil)
 	t2 := time.Now().UnixNano()
-	hand := gomcts.MiniMaxSearch(&initialState)
+	hand, win := gomcts.MiniMaxSearch(&initialState)
 	t3 := time.Now().UnixNano()
 	_ = gomcts.MonteCarloTreeSearch(&initialState, gomcts.DefaultRolloutPolicy, 1000)
 	t4 := time.Now().UnixNano()
 
-	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d,t4-t3:%d,hand:%v\n", t2-t1, t3-t2, t4-t3, hand)
+	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d,t4-t3:%d,hand:%v,win:%v\n", t2-t1, t3-t2, t4-t3, hand, win)
 	time.Sleep(time.Second)
 	/*for i := 0; i < 13; i++ {
 		fmt.Printf("\nHONG_%d = %d", i+1, i)
