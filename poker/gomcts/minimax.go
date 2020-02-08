@@ -28,11 +28,6 @@ func MiniMaxSearch(state GameState) (Action, bool) {
 	}
 }
 
-func spPrint(node *miniMaxNode) {
-	child := node.children[1]
-	child.Print()
-}
-
 // return best choice child
 func expandNode(node *miniMaxNode) *miniMaxNode {
 	var childNode *miniMaxNode
@@ -53,8 +48,6 @@ func expandNode(node *miniMaxNode) *miniMaxNode {
 				node.beta = childNode.alpha
 				bestChild = childNode
 			}
-
-			node.beta = math.Min(childNode.alpha, node.beta)
 		} else {
 			if childNode.beta > node.alpha {
 				node.alpha = childNode.beta
@@ -62,7 +55,8 @@ func expandNode(node *miniMaxNode) *miniMaxNode {
 			}
 		}
 
-		if node.NeedCut() {
+		//裁剪
+		if node.beta <= node.alpha {
 			break
 		}
 	}
@@ -104,43 +98,6 @@ func (node *miniMaxNode) AddLeafChild(state GameState, action Action, score floa
 	//childNode.updateAlphaBeta()
 
 	return &childNode
-}
-
-func (node *miniMaxNode) NeedCut() bool {
-	return node.beta <= node.alpha
-}
-
-// 更新父节点及以上节点的alpha和beta值
-func (node *miniMaxNode) updateAlphaBeta() {
-	var score float64
-	curNode := node
-	for curNode.parent != nil {
-		if curNode.IsMiniNode {
-			score = curNode.beta
-		} else {
-			score = curNode.alpha
-		}
-
-		curNode = curNode.parent
-		/*if curNode.depth == 10 || curNode.depth == 11 {
-			fmt.Printf("\nbefore,%d,%v,%p,%p,%f,%f,%v", curNode.depth, curNode.IsMiniNode, &curNode, &curNode.parent, curNode.alpha, curNode.beta, curNode.causingAction)
-		}*/
-
-		if curNode.IsMiniNode {
-			curNode.beta = math.Min(score, curNode.beta)
-		} else {
-			curNode.alpha = math.Max(score, curNode.alpha)
-		}
-
-		/*if curNode.depth == 10 || curNode.depth == 11 {
-			fmt.Printf("\nafter,%d,%v,%p,%p,%f,%f,%v", curNode.depth, curNode.IsMiniNode, &curNode, &curNode.parent, curNode.alpha, curNode.beta, curNode.causingAction)
-		}*/
-	}
-}
-
-//是否叶子节点
-func (node *miniMaxNode) isLeaf() bool {
-	return node.children == nil || len(node.children) == 0
 }
 
 // Print the node for debugging purposes
