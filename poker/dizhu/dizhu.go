@@ -1,6 +1,9 @@
-package doudizhu
+package dizhu
 
 import (
+	"fmt"
+	"sort"
+
 	"../card"
 	"../gomcts"
 )
@@ -8,7 +11,7 @@ import (
 //角色
 const (
 	ROLE_DIZHU = 0 //地主
-	ROLE_NON1  = 1 //农名1
+	ROLE_NONG1 = 1 //农名1
 	ROLE_NONG2 = 2 //农名2
 )
 
@@ -107,7 +110,7 @@ func (t *DoudizhuGameState) EvaluateGame() (gomcts.GameResult, bool) {
 	var whoWin int
 	if len(t.inHands[ROLE_DIZHU]) == 0 {
 		whoWin = WIN_DIZHU
-	} else if len(t.inHands[ROLE_NON1]) == 0 || len(t.inHands[ROLE_NON2]) == 0 {
+	} else if len(t.inHands[ROLE_NONG1]) == 0 || len(t.inHands[ROLE_NONG2]) == 0 {
 		whoWin = WIN_NONG
 	}
 	if t.myRole == ROLE_DIZHU {
@@ -137,7 +140,6 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 
 	if t.nextToMove == 1 {
 		//轮到我了
-		actions = make([]gomcts.Action, len(candidates))
 		if t.preHand == nil || len(t.preHand) == 0 || t.preRole == t.myRole {
 			//新出或者上轮我出的没人要
 			candidates = aviableCandidates(t.inHands[t.myRole])
@@ -146,6 +148,7 @@ func (t *DoudizhuGameState) GetLegalActions() []gomcts.Action {
 			candidates = append(candidates, []int{})
 		}
 
+		actions = make([]gomcts.Action, len(candidates))
 		for i := 0; i < len(candidates); i++ {
 			actions[i] = &DoudizhuGameAction{hands: make([][]int, 1)}
 			actions[i].(*DoudizhuGameAction).hands[0] = candidates[i]
@@ -203,4 +206,62 @@ func (t *DoudizhuGameState) NextToMove() int8 {
 func CreateDoudizhuGameState(myRole int, inHands [][]int, preHand []int, preRole int) DoudizhuGameState {
 	state := DoudizhuGameState{myRole: myRole, inHands: inHands, preHand: preHand, preRole: preRole, nextToMove: 1}
 	return state
+}
+
+//game
+type DoudizhuGame struct {
+	vals    []int
+	players []*Player
+}
+
+type Player struct {
+	initCards   CardsVals
+	remainCards []int
+}
+
+func NewDoudizhuGame(myRole int) *DoudizhuGame {
+	t := &DoudizhuGame{players: make([]*Player, 3)}
+	t.vals = card.NewCards()
+	card.Shuffle(t.vals)
+	t.Dispacther()
+	return t
+}
+
+func (t *DoudizhuGame) Dispacther() {
+	idx := 0
+	for i := 0; i < len(t.vals)-3; i++ {
+		if t.players[idx] == nil {
+			t.players[idx] = &Player{initCards: make(CardsVals, 0)}
+		}
+		t.players[idx].initCards = append(t.players[idx].initCards, t.vals[i])
+		idx = (idx + 1) % 3
+	}
+
+	for i := 51; i < len(t.vals); i++ {
+		t.players[0].initCards = append(t.players[0].initCards, t.vals[i])
+	}
+
+	//排序
+	for i := 0; i < 3; i++ {
+		sort.Sort(t.players[i].initCards)
+		t.players[i].remainCards = make([]int, len(t.players[i].initCards))
+		copy(t.players[i].remainCards, t.players[i].initCards)
+	}
+}
+
+func (t *DoudizhuGame) PrintRemainCards() {
+	for i := 0; i < 3; i++ {
+		fmt.Printf("\nplayer%d:", i)
+		card.PrintCards(t.players[i].remainCards)
+	}
+}
+
+func (t *DoudizhuGame) Run() {
+	remainCards := make([][]int, 3)
+	for i := 0; i < 3; i++ {
+		remainCards[i] = t.players[i].remainCards
+	}
+	initState := CreateDoudizhuGameState(ROLE_DIZHU, remainCards, nil, -1)
+	hand := gomcts.MiniMaxSearch(&initState)
+	fmt.Printf("\n(t *DoudizhuGame) Run() hand:%v", hand)
 }

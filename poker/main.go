@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"./card"
+	"./dizhu"
 	"./gomcts"
 )
 
@@ -83,9 +84,14 @@ func test() {
 	}*/
 }
 
+func test2() {
+	game := dizhu.NewDoudizhuGame(dizhu.ROLE_DIZHU)
+	game.Run()
+}
+
 func main() {
 	//webPlay()
 	//humanPlay()
 	//batchTrain(1, 1)
-	test()
+	test2()
 }

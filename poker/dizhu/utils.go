@@ -1,4 +1,6 @@
-package doudizhu
+package dizhu
+
+type CardsVals []int
 
 var (
 	valsMap = []int{
@@ -58,4 +60,19 @@ func aviableBiggerCandidates(cards []int, preHand []int) [][]int {
 		}
 	}
 	return candidates
+}
+
+//Len()
+func (t CardsVals) Len() int {
+	return len(t)
+}
+
+//Less(): 由小到大排序
+func (t CardsVals) Less(i, j int) bool {
+	return valsMap[t[i]] < valsMap[t[j]]
+}
+
+//Swap()
+func (t CardsVals) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
 }
