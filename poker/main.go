@@ -86,7 +86,7 @@ func test() {
 
 func test2() {
 	game := dizhu.NewDoudizhuGame(dizhu.ROLE_DIZHU)
-	game.Run()
+	game.Run2()
 	//game.Test()
 }
 

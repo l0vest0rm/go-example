@@ -7,6 +7,8 @@ import (
 
 	"./card"
 	"./gomcts"
+	"github.com/cnf/structhash"
+	"github.com/spaolacci/murmur3"
 )
 
 type CardsVals []int
@@ -1064,5 +1066,178 @@ func (t *RedTenGameState) NextToMove() int8 {
 // CreateRedTenInitialGameState - initializes tic tac toe game state
 func CreateRedTenInitialGameState(a, b, preHand []int) RedTenGameState {
 	state := RedTenGameState{a: a, b: b, preHand: preHand, nextToMove: 1}
+	return state
+}
+
+// ///////////////////////////////////////////////////////////////////////
+
+const (
+	WIN_REDTEN     = 1
+	WIN_REDTEN_NON = 2
+)
+
+var (
+	playerNum = 5
+)
+
+//5人红十
+// RedTen5GameAction - action on a tic tac toe board game
+type RedTen5GameAction struct {
+	hands [][]int //自己或者多个下家出牌
+}
+
+func (t *RedTen5GameAction) Hash() uint64 {
+	return murmur3.Sum64(structhash.Dump(t, 1))
+}
+
+func (t *RedTen5GameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
+	var turn int
+	state := s.(*RedTen5GameState)
+
+	newState := &RedTen5GameState{
+		myRole:  state.myRole,
+		inHands: make([][]int, playerNum),
+		//preHand:    t.hands[len(t.hands)-1],
+		nextToMove: -1 * state.nextToMove,
+	}
+
+	if state.nextToMove == 1 {
+		//轮到我
+		turn = state.myRole
+		if len(t.hands[0]) == 0 {
+			//我跳过
+			newState.preHand = state.preHand
+			newState.preRole = state.preRole
+			newState.inHands[turn] = state.inHands[turn]
+		} else {
+			//我出
+			newState.preHand = t.hands[len(t.hands)-1]
+			newState.preRole = state.myRole
+			newState.inHands[turn] = card.RemoveCards2(state.inHands[turn], t.hands[0])
+		}
+
+		for i := 0; i < playerNum; i++ {
+			turn = (turn + 1) % 3
+			newState.inHands[turn] = state.inHands[turn]
+		}
+	} else {
+		//我的牌不变
+		turn = state.myRole
+		newState.inHands[turn] = state.inHands[turn]
+		for i := 0; i < len(t.hands); i++ {
+			turn = (state.myRole + 1) % 3
+			if len(t.hands[i]) > 0 {
+				newState.preHand = t.hands[i]
+				newState.preRole = turn
+				newState.inHands[turn] = card.RemoveCards2(state.inHands[turn], t.hands[i])
+			} else {
+				newState.inHands[turn] = state.inHands[turn]
+			}
+		}
+
+		if newState.preHand == nil {
+			//都跳过了
+			newState.preHand = state.preHand
+			newState.preRole = state.preRole
+		}
+	}
+
+	//fmt.Printf("\nApplyTo,state:%v,newState:%v,action:%v", state, newState, t)
+	return newState
+}
+
+type RedTen5GameState struct {
+	myRole     int
+	inHands    [][]int
+	preHand    []int
+	preRole    int
+	nextToMove int8
+}
+
+func (t *RedTen5GameState) Hash() uint64 {
+	return murmur3.Sum64(structhash.Dump(t, 1))
+}
+
+func (t *RedTen5GameState) EvaluateGame() (gomcts.GameResult, bool) {
+	return 0, true
+}
+
+func (t *RedTen5GameState) GetLegalActions() []gomcts.Action {
+	var turn int
+	var candidates [][]int
+	var candidates2 [][]int
+	var actions []gomcts.Action
+	printActions := make([][][]int, 0)
+
+	if t.nextToMove == 1 {
+		//轮到我了
+		if t.preHand == nil || len(t.preHand) == 0 || t.preRole == t.myRole {
+			//新出或者上轮我出的没人要
+			candidates = aviableCandidates(t.inHands[t.myRole])
+		} else {
+			candidates = aviableBiggerCandidates(t.inHands[t.myRole], t.preHand)
+			candidates = append(candidates, []int{})
+		}
+
+		actions = make([]gomcts.Action, len(candidates))
+		for i := 0; i < len(candidates); i++ {
+			printActions = append(printActions, [][]int{candidates[i]})
+			actions[i] = &RedTen5GameAction{hands: make([][]int, 1)}
+			actions[i].(*RedTen5GameAction).hands[0] = candidates[i]
+		}
+
+	} else {
+		actions = make([]gomcts.Action, 0)
+		turn = (t.myRole + 1) % 3
+		if t.preHand == nil || len(t.preHand) == 0 || t.preRole == turn {
+			//新出或者上轮此人出没人要
+			candidates = aviableCandidates(t.inHands[turn])
+		} else {
+			candidates = aviableBiggerCandidates(t.inHands[turn], t.preHand)
+			candidates = append(candidates, []int{})
+		}
+
+		turn = (turn + 1) % 3
+		for i := 0; i < len(candidates); i++ {
+			//前一个农民没要或者上轮此人出没人要
+			if len(candidates[i]) == 0 {
+				if t.preRole == turn {
+					//上轮此人出没人要
+					candidates2 = aviableCandidates(t.inHands[turn])
+				} else {
+					candidates2 = aviableBiggerCandidates(t.inHands[turn], t.preHand)
+					candidates2 = append(candidates2, []int{})
+				}
+			} else {
+				candidates2 = aviableBiggerCandidates(t.inHands[turn], candidates[i])
+				candidates2 = append(candidates2, []int{})
+			}
+
+			for j := 0; j < len(candidates2); j++ {
+				printActions = append(printActions, [][]int{candidates[i], candidates2[j]})
+				action := &RedTen5GameAction{hands: make([][]int, 2)}
+				action.hands[0] = candidates[i]
+				action.hands[1] = candidates2[j]
+				actions = append(actions, action)
+			}
+		}
+	}
+
+	//fmt.Printf("\nGetLegalActions,state:%v,actions:%v", t, printActions)
+	return actions
+}
+
+func (t *RedTen5GameState) IsGameEnded() bool {
+	_, ended := t.EvaluateGame()
+	return ended
+}
+
+func (t *RedTen5GameState) NextToMove() int8 {
+	return t.nextToMove
+}
+
+// CreateRedTen5GameState - initializes game state
+func CreateRedTen5GameState(myRole int, inHands [][]int, preHand []int, preRole int) RedTen5GameState {
+	state := RedTen5GameState{myRole: myRole, inHands: inHands, preHand: preHand, preRole: preRole, nextToMove: 1}
 	return state
 }
