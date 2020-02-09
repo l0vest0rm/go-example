@@ -65,7 +65,7 @@ func test() {
 	t2 := time.Now().UnixNano()
 	hand, win := gomcts.MiniMaxSearch(&initialState)
 	t3 := time.Now().UnixNano()
-	_ = gomcts.MonteCarloTreeSearch(&initialState, gomcts.DefaultRolloutPolicy, 1000)
+	hand = gomcts.MonteCarloTreeSearch(&initialState, gomcts.DefaultRolloutPolicy, 10000)
 	t4 := time.Now().UnixNano()
 
 	fmt.Printf("\nelasp time:t2-t1:%d,t3-t2:%d,t4-t3:%d,hand:%v,win:%v\n", t2-t1, t3-t2, t4-t3, hand, win)
@@ -98,6 +98,7 @@ func test3() {
 }
 
 func main() {
+
 	//webPlay()
 	//humanPlay()
 	//batchTrain(1, 1)

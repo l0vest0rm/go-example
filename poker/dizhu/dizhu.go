@@ -7,6 +7,8 @@ import (
 
 	"../card"
 	"../gomcts"
+	"github.com/cnf/structhash"
+	"github.com/spaolacci/murmur3"
 )
 
 //角色
@@ -25,6 +27,10 @@ const (
 // RedTenGameAction - action on a tic tac toe board game
 type DoudizhuGameAction struct {
 	hands [][]int //自己或者多个下家出牌
+}
+
+func (t *DoudizhuGameAction) Hash() uint64 {
+	return murmur3.Sum64(structhash.Dump(t, 1))
 }
 
 func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
@@ -106,6 +112,10 @@ type DoudizhuGameState struct {
 	preHand    []int
 	preRole    int
 	nextToMove int8
+}
+
+func (t *DoudizhuGameState) Hash() uint64 {
+	return murmur3.Sum64(structhash.Dump(t, 1))
 }
 
 func (t *DoudizhuGameState) EvaluateGame() (gomcts.GameResult, bool) {
@@ -264,19 +274,17 @@ func (t *DoudizhuGame) PrintRemainCards() {
 
 func (t *DoudizhuGame) Run() {
 	remainCards := make([][]int, 3)
-	remainCards[0] = []int{card.HONG_3, card.HONG_7, card.FANG_7}
-	remainCards[1] = []int{card.HONG_4, card.HONG_8, card.HONG_9}
-	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11}
-	for i := 0; i < 3; i++ {
+	remainCards[0] = []int{card.HONG_3, card.HONG_7, card.FANG_7, card.FANG_8, card.FANG_9, card.FANG_10}
+	remainCards[1] = []int{card.HONG_4, card.HONG_8, card.HONG_9, card.HONG_10, card.HONG_11, card.HONG_12}
+	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11, card.HEI_12, card.HEI_13}
+	/*for i := 0; i < 3; i++ {
 		//l := len(t.players[i].remainCards)
 		remainCards[i] = t.players[i].remainCards[:7]
-	}
-	for i := 0; i < 3; i++ {
-		fmt.Printf("\nplayer%d:", i)
-		card.PrintCards(remainCards[i])
-	}
+	}*/
+
 	t1 := time.Now().Unix()
 	initState := CreateDoudizhuGameState(ROLE_DIZHU, remainCards, nil, -1)
+	//gomcts.MiniMaxInit()
 	hand, win := gomcts.MiniMaxSearch(&initState)
 	t2 := time.Now().Unix()
 	fmt.Printf("\n(t *DoudizhuGame) Run(), t2-r1=%d, hand:%v,win:%v\n", t2-t1, card.ConvertVals2PrintChars(hand.(*DoudizhuGameAction).hands[0]), win)
@@ -297,4 +305,25 @@ func (t *DoudizhuGame) Test() {
 		player1:♣3,♣4,♥6,♦7,♥9,♣10,♠10,
 		player2:♠4,♥4,♠5,♣6,♠6,♠7,♣7,
 	*/
+}
+
+func (t *DoudizhuGame) Run2() {
+	remainCards := make([][]int, 3)
+	remainCards[0] = []int{card.HONG_3, card.HONG_7, card.FANG_7, card.FANG_8, card.FANG_9, card.FANG_10}
+	remainCards[1] = []int{card.HONG_4, card.HONG_8, card.HONG_9, card.HONG_10, card.HONG_11, card.HONG_12}
+	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11, card.HEI_12, card.HEI_13}
+	/*for i := 0; i < 3; i++ {
+		//l := len(t.players[i].remainCards)
+		remainCards[i] = t.players[i].remainCards[:7]
+	}*/
+	for i := 0; i < 3; i++ {
+		fmt.Printf("\nplayer%d:", i)
+		card.PrintCards(remainCards[i])
+	}
+	t1 := time.Now().Unix()
+	initState := CreateDoudizhuGameState(ROLE_DIZHU, remainCards, nil, -1)
+
+	action := gomcts.MonteCarloTreeSearch(&initState, gomcts.DefaultRolloutPolicy, 100000)
+	t2 := time.Now().Unix()
+	fmt.Printf("\n(t *DoudizhuGame) Run(), t2-r1=%d, hand:%v\n", t2-t1, card.ConvertVals2PrintChars(action.(*DoudizhuGameAction).hands[0]))
 }

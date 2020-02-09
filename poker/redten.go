@@ -975,6 +975,10 @@ type RedTenGameAction struct {
 	nextToMove int8
 }
 
+func (a RedTenGameAction) Hash() uint64 {
+	return 0
+}
+
 func (t *RedTenGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 	var err error
 	state := s.(*RedTenGameState)
@@ -1007,6 +1011,10 @@ type RedTenGameState struct {
 	b          []int
 	preHand    []int
 	nextToMove int8
+}
+
+func (a RedTenGameState) Hash() uint64 {
+	return 0
 }
 
 func (t *RedTenGameState) EvaluateGame() (gomcts.GameResult, bool) {

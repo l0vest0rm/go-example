@@ -32,9 +32,12 @@ func MiniMaxSearch(state GameState) (Action, bool) {
 func expandNode(node *miniMaxNode) *miniMaxNode {
 	var childNode *miniMaxNode
 	var bestChild *miniMaxNode
-	actions := node.state.GetLegalActions()
+	var actions []Action
+	var newState GameState
+
+	actions = node.state.GetLegalActions()
 	for i := 0; i < len(actions); i++ {
-		newState := actions[i].ApplyTo(node.state)
+		newState = actions[i].ApplyTo(node.state)
 		if newState.IsGameEnded() {
 			score, _ := newState.EvaluateGame()
 			childNode = node.AddLeafChild(newState, actions[i], float64(score))
@@ -107,7 +110,7 @@ func (node *miniMaxNode) Print() {
 		padding += " "
 	}
 
-	fmt.Println(padding, node.depth, node.IsMiniNode, node.alpha, node.beta, node.causingAction)
+	fmt.Println(padding, node.depth, node.IsMiniNode, node.alpha, node.beta, node.state, node.causingAction)
 
 	for _, cn := range node.children {
 		cn.Print()

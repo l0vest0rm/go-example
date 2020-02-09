@@ -7,6 +7,10 @@ type TicTacToeBoardGameAction struct {
 	value  int8
 }
 
+func (a TicTacToeBoardGameAction) Hash() uint64 {
+	return 0
+}
+
 // ApplyTo - TicTacToeBoardGameAction implementation of ApplyTo method of Action interface
 func (a TicTacToeBoardGameAction) ApplyTo(s GameState) GameState {
 	ticTacToeGameState := s.(TicTacToeGameState)
@@ -32,6 +36,10 @@ type TicTacToeGameState struct {
 	emptySquares uint16
 	ended        bool
 	result       GameResult
+}
+
+func (a TicTacToeGameState) Hash() uint64 {
+	return 0
 }
 
 // CreateTicTacToeInitialGameState - initializes tic tac toe game state
