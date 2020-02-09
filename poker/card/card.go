@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -198,4 +199,64 @@ func RemoveCards(remainCards []int, cards []int) ([]int, error) {
 	}
 
 	return tmpCards, nil
+}
+
+func RemoveCards3(remainCards []int, cards []int) []int {
+	j := 0
+	k := 0
+	retCards := make([]int, len(remainCards)-len(cards))
+	for i := 0; i < len(remainCards); i++ {
+		if j < len(cards) && remainCards[i] == cards[j] {
+			j++
+			continue
+		}
+
+		if k >= len(retCards) {
+			fmt.Printf("RemoveCards2,remainCards:%v,cards:%v\n", remainCards, cards)
+		}
+		retCards[k] = remainCards[i]
+		k++
+	}
+
+	return retCards
+}
+
+func RemoveCards2(remainCards []int, cards []int) []int {
+	idxes := make([]int, len(cards))
+	for i := 0; i < len(idxes); i++ {
+		idxes[i] = -1
+	}
+	for i := 0; i < len(cards); i++ {
+		for j := 0; j < len(remainCards); j++ {
+			if cards[i] == remainCards[j] {
+				idxes[i] = j
+				break
+			}
+		}
+	}
+
+	sort.Ints(idxes)
+
+	j := 0
+	k := 0
+	retCards := make([]int, len(remainCards)-len(cards))
+	for i := 0; i < len(remainCards); i++ {
+		if j < len(idxes) && i == idxes[j] {
+			j++
+			continue
+		}
+
+		if j < len(idxes) && idxes[j] == -1 {
+			j++
+		}
+
+		if k < len(retCards) {
+			retCards[k] = remainCards[i]
+			k++
+		} else {
+			retCards = append(retCards, remainCards[i])
+		}
+	}
+
+	return retCards
 }

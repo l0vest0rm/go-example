@@ -34,7 +34,6 @@ func (t *DoudizhuGameAction) Hash() uint64 {
 }
 
 func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
-	var err error
 	var turn int
 	state := s.(*DoudizhuGameState)
 
@@ -57,10 +56,7 @@ func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 			//我出
 			newState.preHand = t.hands[len(t.hands)-1]
 			newState.preRole = state.myRole
-			newState.inHands[turn], err = card.RemoveCards(state.inHands[turn], t.hands[0])
-			if err != nil {
-				panic(err)
-			}
+			newState.inHands[turn] = card.RemoveCards2(state.inHands[turn], t.hands[0])
 		}
 
 		turn = (turn + 1) % 3
@@ -72,10 +68,7 @@ func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 		if len(t.hands[0]) > 0 {
 			newState.preHand = t.hands[0]
 			newState.preRole = turn
-			newState.inHands[turn], err = card.RemoveCards(state.inHands[turn], t.hands[0])
-			if err != nil {
-				panic(err)
-			}
+			newState.inHands[turn] = card.RemoveCards2(state.inHands[turn], t.hands[0])
 		} else {
 			newState.inHands[turn] = state.inHands[turn]
 		}
@@ -84,10 +77,7 @@ func (t *DoudizhuGameAction) ApplyTo(s gomcts.GameState) gomcts.GameState {
 		if len(t.hands[1]) > 0 {
 			newState.preHand = t.hands[1]
 			newState.preRole = turn
-			newState.inHands[turn], err = card.RemoveCards(state.inHands[turn], t.hands[1])
-			if err != nil {
-				panic(err)
-			}
+			newState.inHands[turn] = card.RemoveCards2(state.inHands[turn], t.hands[1])
 		} else {
 			newState.inHands[turn] = state.inHands[turn]
 		}
@@ -312,10 +302,10 @@ func (t *DoudizhuGame) Run2() {
 	remainCards[0] = []int{card.HONG_3, card.HONG_7, card.FANG_7, card.FANG_8, card.FANG_9, card.FANG_10}
 	remainCards[1] = []int{card.HONG_4, card.HONG_8, card.HONG_9, card.HONG_10, card.HONG_11, card.HONG_12}
 	remainCards[2] = []int{card.HONG_5, card.HONG_10, card.HONG_11, card.HEI_12, card.HEI_13}
-	/*for i := 0; i < 3; i++ {
+	for i := 0; i < 3; i++ {
 		//l := len(t.players[i].remainCards)
-		remainCards[i] = t.players[i].remainCards[:7]
-	}*/
+		remainCards[i] = t.players[i].remainCards
+	}
 	for i := 0; i < 3; i++ {
 		fmt.Printf("\nplayer%d:", i)
 		card.PrintCards(remainCards[i])

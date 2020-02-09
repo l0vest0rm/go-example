@@ -97,6 +97,13 @@ func test3() {
 	fmt.Printf("test3,candidates:%v", candidates)
 }
 
+func test4() {
+	remainCards := []int{3, 5, 7, 9, 13}
+	cards := []int{7, 8}
+	remainCards = card.RemoveCards2(remainCards, cards)
+	fmt.Printf("\n remainCards:%v\n", remainCards)
+}
+
 func main() {
 
 	//webPlay()
